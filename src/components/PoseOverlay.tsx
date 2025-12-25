@@ -77,26 +77,28 @@ export const PoseOverlay: React.FC<PoseOverlayProps> = ({
 
       // Find pose data for current video time
       const currentTime = video.currentTime;
-      const frameData = poseData.find(
+      let frameData = poseData.find(
         (frame) => Math.abs(frame.timestamp - currentTime) < 0.1
-      ) || poseData[Math.floor((currentTime / video.duration) * poseData.length)] || poseData[0];
+      );
+      if (!frameData) {
+        const index = Math.floor((currentTime / video.duration) * poseData.length);
+        frameData = poseData[index] || poseData[0];
+      }
 
       if (!frameData || !frameData.landmarks) {
         return;
       }
-
-      // Get video natural dimensions for coordinate conversion
-      const videoWidth = video.videoWidth || rect.width;
-      const videoHeight = video.videoHeight || rect.height;
 
       // Draw pose skeleton
       ctx.strokeStyle = '#00ff00';
       ctx.fillStyle = '#00ff00';
       ctx.lineWidth = 2;
 
-      // Helper function to safely get coordinate value
+      // Helper function to safely get coordinate value (NO ?? OR || OPERATORS)
       const getCoord = (p: any, key: 'x' | 'y'): number => {
-        if (typeof p?.[key] === 'number') return p[key];
+        if (p && typeof p[key] === 'number') {
+          return p[key];
+        }
         return 0;
       };
 
