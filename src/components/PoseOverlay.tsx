@@ -94,6 +94,12 @@ export const PoseOverlay: React.FC<PoseOverlayProps> = ({
       ctx.fillStyle = '#00ff00';
       ctx.lineWidth = 2;
 
+      // Helper function to safely get coordinate value
+      const getCoord = (p: any, key: 'x' | 'y'): number => {
+        if (typeof p?.[key] === 'number') return p[key];
+        return 0;
+      };
+
       // Draw connections
       POSE_CONNECTIONS.forEach(([point1Name, point2Name]) => {
         const point1 = frameData.landmarks[point1Name];
@@ -101,10 +107,10 @@ export const PoseOverlay: React.FC<PoseOverlayProps> = ({
 
         if (point1 && point2) {
           // Convert normalized coordinates to canvas coordinates
-          const x1 = (point1.x ?? (point1 as any).x || 0) * canvas.width;
-          const y1 = (point1.y ?? (point1 as any).y || 0) * canvas.height;
-          const x2 = (point2.x ?? (point2 as any).x || 0) * canvas.width;
-          const y2 = (point2.y ?? (point2 as any).y || 0) * canvas.height;
+          const x1 = getCoord(point1, 'x') * canvas.width;
+          const y1 = getCoord(point1, 'y') * canvas.height;
+          const x2 = getCoord(point2, 'x') * canvas.width;
+          const y2 = getCoord(point2, 'y') * canvas.height;
 
           ctx.beginPath();
           ctx.moveTo(x1, y1);
@@ -117,8 +123,8 @@ export const PoseOverlay: React.FC<PoseOverlayProps> = ({
       Object.entries(frameData.landmarks).forEach(([name, point]) => {
         if (!point) return;
 
-        const x = (point.x ?? (point as any).x || 0) * canvas.width;
-        const y = (point.y ?? (point as any).y || 0) * canvas.height;
+        const x = getCoord(point, 'x') * canvas.width;
+        const y = getCoord(point, 'y') * canvas.height;
 
         ctx.beginPath();
         ctx.arc(x, y, 4, 0, 2 * Math.PI);
