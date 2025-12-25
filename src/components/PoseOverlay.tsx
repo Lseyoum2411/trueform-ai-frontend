@@ -82,7 +82,10 @@ export const PoseOverlay: React.FC<PoseOverlayProps> = ({
       );
       if (!frameData) {
         const index = Math.floor((currentTime / video.duration) * poseData.length);
-        frameData = poseData[index] || poseData[0];
+        frameData = poseData[index];
+        if (!frameData) {
+          frameData = poseData[0];
+        }
       }
 
       if (!frameData || !frameData.landmarks) {
@@ -94,7 +97,8 @@ export const PoseOverlay: React.FC<PoseOverlayProps> = ({
       ctx.fillStyle = '#00ff00';
       ctx.lineWidth = 2;
 
-      // Helper function to safely get coordinate value (NO ?? OR || OPERATORS)
+      // Helper function to safely get coordinate value
+      // Uses explicit type checking - NO nullish coalescing or logical OR operators
       const getCoord = (p: any, key: 'x' | 'y'): number => {
         if (p && typeof p[key] === 'number') {
           return p[key];
@@ -164,4 +168,3 @@ export const PoseOverlay: React.FC<PoseOverlayProps> = ({
 
   return null; // This component doesn't render anything itself
 };
-
