@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { Layout } from '@/components/Layout';
 import { usePollStatus } from '@/hooks/usePollStatus';
 import { getAnalysisResults, getVideoStatus } from '@/lib/api';
 import { AnalysisResult, UIFeedback, VideoStatus } from '@/types';
 import { Loader } from '@/components/Loader';
+import { PoseOverlayCanvas } from '@/components/PoseOverlayCanvas';
 
 export default function Results() {
   const router = useRouter();
@@ -243,7 +244,7 @@ export default function Results() {
                   style={{ zIndex: 1 }}
                 />
                 {analysisResult.pose_data && analysisResult.pose_data.length > 0 && (
-                  <PoseOverlay
+                  <PoseOverlayCanvas
                     videoRef={videoRef}
                     canvasRef={canvasRef}
                     poseData={analysisResult.pose_data}
