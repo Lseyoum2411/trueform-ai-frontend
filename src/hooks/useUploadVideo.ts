@@ -10,7 +10,11 @@ export const useUploadVideo = () => {
     error: null,
   });
 
-  const upload = async (file: File, sport: Sport, exerciseType: string): Promise<UploadResponse> => {
+  const upload = async (
+    file: File,
+    sport: Sport,
+    exerciseType: string
+  ): Promise<UploadResponse> => {
     setState({
       file,
       uploading: true,
@@ -20,34 +24,29 @@ export const useUploadVideo = () => {
 
     try {
       const response = await uploadVideo(file, sport, exerciseType);
-      
-      if (response.success) {
-        setState((prev) => ({
-          ...prev,
-          uploading: false,
-          progress: 100,
-        }));
-      } else {
-        setState((prev) => ({
-          ...prev,
-          uploading: false,
-          error: response.error || 'Upload failed',
-        }));
-      }
+
+      setState((prev) => ({
+        ...prev,
+        uploading: false,
+        progress: 100,
+      }));
 
       return response;
     } catch (error: any) {
-      const errorMessage = error.message || 'Upload failed. Please try again.';
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.detail ||
+        error.message ||
+        'Upload failed. Please try again.';
+
       setState((prev) => ({
         ...prev,
         uploading: false,
         error: errorMessage,
       }));
 
-      return {
-        success: false,
-        error: errorMessage,
-      };
+      // Re-throw the error so callers can use try/catch
+      throw error;
     }
   };
 

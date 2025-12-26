@@ -28,6 +28,7 @@ export interface UploadResponse {
   status: string;
   next_poll_url: string;
   next_steps: string;
+  // Note: success field removed - API returns video_id on success, throws exception on failure
 }
 
 // Status response from backend

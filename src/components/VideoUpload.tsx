@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from 'react';
+import { useRouter } from 'next/router';
 import { useUploadVideo } from '@/hooks/useUploadVideo';
 import { validateVideoFile } from '@/utils/validators';
 import { Sport } from '@/types';
@@ -17,6 +18,7 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
   onUploadSuccess,
   onError,
 }) => {
+  const router = useRouter();
   const { upload, uploading, error, file } = useUploadVideo();
   const [dragActive, setDragActive] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
@@ -30,15 +32,28 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
       }
 
       setPreview(URL.createObjectURL(selectedFile));
-      const response = await upload(selectedFile, sport, exerciseType);
+      
+      try {
+        const response = await upload(selectedFile, sport, exerciseType);
 
-      if (response.success) {
-        onUploadSuccess?.();
-      } else {
-        onError?.(response.error || 'Upload failed');
+        // If upload succeeds, response will have video_id
+        if (response.video_id) {
+          onUploadSuccess?.();
+          // Navigate to results page with video_id using Next.js router
+          router.push(`/results?video_id=${response.video_id}`);
+        }
+      } catch (error: any) {
+        // Extract error message from axios error if present
+        const errorMessage =
+          error.response?.data?.message ||
+          error.response?.data?.detail ||
+          error.message ||
+          'Upload failed. Please try again.';
+        
+        onError?.(errorMessage);
       }
     },
-    [upload, sport, exerciseType, onUploadSuccess, onError]
+    [upload, sport, exerciseType, onUploadSuccess, onError, router]
   );
 
   const handleDrag = useCallback((e: React.DragEvent) => {
