@@ -41,7 +41,14 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
         }
 
         onUploadSuccess?.(response.video_id);
-        router.push(`/results?video_id=${response.video_id}`);
+        // Pass filename in query params for video playback
+        const params = new URLSearchParams({
+          video_id: response.video_id,
+        });
+        if (response.filename) {
+          params.set('filename', response.filename);
+        }
+        router.push(`/results?${params.toString()}`);
       } catch (err: any) {
         onError?.(
           err?.response?.data?.message ??

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { Layout } from '@/components/Layout';
 import { usePollStatus } from '@/hooks/usePollStatus';
@@ -6,11 +6,15 @@ import { getAnalysisResults, getVideoStatus } from '@/lib/api';
 import { AnalysisResult, UIFeedback, VideoStatus } from '@/types';
 import { Loader } from '@/components/Loader';
 import { PoseOverlayCanvas } from '@/components/PoseOverlayCanvas';
+import { formatFeedbackItem, formatStrengthText, formatMetricLabel, FormattedFeedback } from '@/utils/feedbackFormatter';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export default function Results() {
   const router = useRouter();
-  const { video_id } = router.query;
+  const { video_id, filename } = router.query;
   const videoId = video_id as string;
+  const videoFilename = filename as string | undefined;
 
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
@@ -38,8 +42,24 @@ export default function Results() {
         try {
           const results = await getAnalysisResults(videoId);
           setAnalysisResult(results);
-          // In production, you'd fetch the video URL from the backend
-          // For now, we'll use a placeholder or construct from video_id
+          
+          // Construct video URL from backend uploads directory
+          // Backend serves videos at /uploads/{filename}
+          // Filename comes from upload response (passed as query param) or from results
+          let finalFilename = videoFilename;
+          if (!finalFilename) {
+            // Try to get filename from results if available
+            finalFilename = (results as any).filename;
+          }
+          if (!finalFilename) {
+            // Fallback: construct filename from video_id (backend stores as {video_id}{extension})
+            // Try common extensions
+            const extensions = ['.mp4', '.mov', '.avi', '.webm'];
+            // Start with .mp4 as default
+            finalFilename = `${videoId}.mp4`;
+          }
+          const constructedUrl = `${API_BASE_URL}/uploads/${finalFilename}`;
+          setVideoUrl(constructedUrl);
         } catch (err: any) {
           setError(err.response?.data?.detail || err.message || 'Failed to load results');
         } finally {
@@ -52,41 +72,69 @@ export default function Results() {
     },
   });
 
-  // Convert backend feedback to UI-friendly format
-  const convertFeedbackToUI = (result: AnalysisResult): UIFeedback[] => {
-    const uiFeedback: UIFeedback[] = [];
+  // Convert backend feedback to professional, coach-like format
+  const processFeedback = (result: AnalysisResult): {
+    strengths: FormattedFeedback[];
+    improvements: FormattedFeedback[];
+  } => {
+    const strengths: FormattedFeedback[] = [];
+    const improvements: FormattedFeedback[] = [];
 
-    // Add positive feedback from strengths
-    result.strengths.forEach((strength) => {
-      uiFeedback.push({
-        type: 'positive',
-        title: 'Strength',
-        description: strength,
-      });
-    });
-
-    // Add issues from weaknesses/areas_for_improvement
-    result.weaknesses.forEach((weakness) => {
-      uiFeedback.push({
-        type: 'issue',
-        title: 'Area for Improvement',
-        description: weakness,
-        severity: 'medium',
-      });
-    });
-
-    // Add feedback items from the feedback array
+    // Process feedback items from the feedback array first (these are already structured)
     result.feedback.forEach((item) => {
-      uiFeedback.push({
-        type: item.severity === 'positive' || item.severity === 'info' ? 'positive' : 'issue',
-        title: item.aspect || item.category,
-        description: item.message,
-        severity: item.severity === 'warning' ? 'high' : item.severity === 'info' ? 'low' : 'medium',
-        timestamp: item.timestamp || undefined,
-      });
+      const formatted = formatFeedbackItem(item, item.aspect || item.category);
+      if (formatted.type === 'positive') {
+        strengths.push(formatted);
+      } else {
+        improvements.push(formatted);
+      }
     });
 
-    return uiFeedback.slice(0, 10); // Limit to 10 items
+    // Process strengths array (max 3 total)
+    result.strengths?.forEach((strength) => {
+      // Skip if we already have this strength from feedback array
+      const strengthLabel = formatStrengthText(strength);
+      if (!strengths.some(s => s.title === strengthLabel)) {
+        const formatted = formatFeedbackItem({
+          category: 'Strength',
+          aspect: strengthLabel,
+          severity: 'positive',
+        }, strengthLabel);
+        strengths.push(formatted);
+      }
+    });
+
+    // Process weaknesses/areas_for_improvement (max 4 total improvements)
+    const allWeaknesses = [...(result.weaknesses || []), ...(result.areas_for_improvement || [])];
+    allWeaknesses.forEach((weakness) => {
+      // Skip if we already have this improvement from feedback array
+      const weaknessLabel = formatStrengthText(weakness);
+      if (!improvements.some(i => i.title === weaknessLabel)) {
+        const formatted = formatFeedbackItem({
+          category: 'Area for Improvement',
+          aspect: weaknessLabel,
+          severity: 'medium',
+        }, weaknessLabel);
+        improvements.push(formatted);
+      }
+    });
+
+    // Remove duplicates and sort by priority (high -> medium -> low)
+    const priorityOrder = { high: 3, medium: 2, low: 1 };
+    const uniqueStrengths = Array.from(
+      new Map(strengths.map(item => [item.title, item])).values()
+    ).slice(0, 3);
+
+    const uniqueImprovements = Array.from(
+      new Map(improvements.map(item => [item.title, item])).values()
+    )
+      .sort((a, b) => priorityOrder[b.priority] - priorityOrder[a.priority])
+      .slice(0, 4);
+
+    return {
+      strengths: uniqueStrengths,
+      improvements: uniqueImprovements,
+    };
   };
 
   if (!videoId) {
@@ -178,8 +226,8 @@ export default function Results() {
     );
   }
 
-  // Results ready
-  const uiFeedback = convertFeedbackToUI(analysisResult);
+  // Results ready - process feedback into professional format
+  const { strengths, improvements } = processFeedback(analysisResult);
   const scoreColor =
     analysisResult.overall_score >= 80
       ? 'text-green-400'
@@ -237,6 +285,13 @@ export default function Results() {
                   controls
                   className="w-full h-full object-contain"
                   crossOrigin="anonymous"
+                  onError={(e) => {
+                    console.error('Video playback error:', e);
+                    // Try fallback extensions if primary fails
+                    if (!videoUrl.includes('.mp4')) {
+                      setVideoUrl(`${API_BASE_URL}/uploads/${videoId}.mp4`);
+                    }
+                  }}
                 />
                 <canvas
                   ref={canvasRef}
@@ -272,67 +327,90 @@ export default function Results() {
                   <div className="text-6xl">🎥</div>
                   <p className="text-gray-400">Video playback will be available here</p>
                   <p className="text-sm text-gray-500">Video ID: {videoId}</p>
-                  <p className="text-xs text-gray-600 mt-2">
-                    Note: Video URL serving is not yet implemented. Pose overlay will work once video is available.
-                  </p>
                 </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* Feedback Items */}
-        <div className="space-y-4">
+        {/* Feedback & Recommendations */}
+        <div className="space-y-8">
           <h2 className="text-2xl font-bold text-white">Feedback & Recommendations</h2>
 
-          {uiFeedback.length > 0 ? (
-            <div className="grid gap-4">
-              {uiFeedback.map((feedback, index) => (
-                <div
-                  key={index}
-                  className={`border rounded-lg p-6 ${
-                    feedback.type === 'positive'
-                      ? 'bg-green-900/20 border-green-600/50'
-                      : 'bg-red-900/20 border-red-600/50'
-                  }`}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-semibold text-white">{feedback.title}</h3>
-                    {feedback.type === 'positive' ? (
-                      <span className="text-green-400 text-sm">✓ Positive</span>
-                    ) : (
-                      <span
-                        className={`text-sm ${
-                          feedback.severity === 'high'
-                            ? 'text-red-400'
-                            : feedback.severity === 'medium'
-                            ? 'text-yellow-400'
-                            : 'text-gray-400'
-                        }`}
-                      >
-                        {feedback.severity === 'high'
-                          ? 'High Priority'
-                          : feedback.severity === 'medium'
-                          ? 'Medium Priority'
-                          : 'Low Priority'}
-                      </span>
-                    )}
+          {/* Strengths Section */}
+          {strengths.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-green-400 flex items-center gap-2">
+                <span>✓</span> Strengths
+              </h3>
+              <div className="grid gap-4">
+                {strengths.map((feedback, index) => (
+                  <div
+                    key={`strength-${index}`}
+                    className="bg-green-900/20 border border-green-600/50 rounded-lg p-6"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <h4 className="font-semibold text-white text-lg">{feedback.title}</h4>
+                      <span className="text-green-400 text-sm font-medium">✓ Positive</span>
+                    </div>
+                    <p className="text-gray-200 leading-relaxed">{feedback.description}</p>
                   </div>
-                  <p className="text-gray-300 mb-2">{feedback.description}</p>
-                  {feedback.recommendation && (
-                    <p className="text-sm text-blue-400 italic">
-                      💡 Recommendation: {feedback.recommendation}
-                    </p>
-                  )}
-                  {feedback.timestamp && (
-                    <p className="text-xs text-gray-500 mt-2">
-                      At {feedback.timestamp.toFixed(1)}s
-                    </p>
-                  )}
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          ) : (
+          )}
+
+          {/* Areas for Improvement Section */}
+          {improvements.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-amber-400 flex items-center gap-2">
+                <span>⚡</span> Areas for Improvement
+              </h3>
+              <div className="grid gap-4">
+                {improvements.map((feedback, index) => {
+                  const priorityColors = {
+                    high: 'border-red-600/50 bg-red-900/20',
+                    medium: 'border-amber-600/50 bg-amber-900/20',
+                    low: 'border-gray-600/50 bg-gray-900/20',
+                  };
+                  const priorityTextColors = {
+                    high: 'text-red-400',
+                    medium: 'text-amber-400',
+                    low: 'text-gray-400',
+                  };
+                  const priorityLabels = {
+                    high: 'High Priority',
+                    medium: 'Medium Priority',
+                    low: 'Low Priority',
+                  };
+
+                  return (
+                    <div
+                      key={`improvement-${index}`}
+                      className={`border rounded-lg p-6 ${priorityColors[feedback.priority]}`}
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <h4 className="font-semibold text-white text-lg">{feedback.title}</h4>
+                        <span className={`text-sm font-medium ${priorityTextColors[feedback.priority]}`}>
+                          {priorityLabels[feedback.priority]}
+                        </span>
+                      </div>
+                      <p className="text-gray-200 leading-relaxed mb-3">{feedback.description}</p>
+                      {feedback.recommendation && (
+                        <div className="mt-3 pt-3 border-t border-gray-700/50">
+                          <p className="text-sm text-blue-300 font-medium">💡 Recommendation</p>
+                          <p className="text-gray-300 mt-1">{feedback.recommendation}</p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {strengths.length === 0 && improvements.length === 0 && (
             <div className="bg-dark-surface border border-dark-border rounded-lg p-8 text-center">
               <p className="text-gray-400">No feedback available yet.</p>
             </div>
