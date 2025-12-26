@@ -8,7 +8,7 @@ import { Loader } from './Loader';
 interface VideoUploadProps {
   sport: Sport;
   exerciseType: string;
-  onUploadSuccess?: () => void;
+  onUploadSuccess?: (videoId: string) => void;
   onError?: (error: string) => void;
 }
 
@@ -36,21 +36,18 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
       try {
         const response = await upload(selectedFile, sport, exerciseType);
 
-        // If upload succeeds, response will have video_id
-        if (response.video_id) {
-          onUploadSuccess?.();
-          // Navigate to results page with video_id using Next.js router
-          router.push(`/results?video_id=${response.video_id}`);
+        if (!response.video_id) {
+          throw new Error('Upload succeeded but video_id is missing');
         }
-      } catch (error: any) {
-        // Extract error message from axios error if present
-        const errorMessage =
-          error.response?.data?.message ||
-          error.response?.data?.detail ||
-          error.message ||
-          'Upload failed. Please try again.';
-        
-        onError?.(errorMessage);
+
+        onUploadSuccess?.(response.video_id);
+        router.push(`/results?video_id=${response.video_id}`);
+      } catch (err: any) {
+        onError?.(
+          err?.response?.data?.message ??
+          err?.message ??
+          'Upload failed'
+        );
       }
     },
     [upload, sport, exerciseType, onUploadSuccess, onError, router]

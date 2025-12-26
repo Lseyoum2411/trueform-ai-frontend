@@ -51,11 +51,12 @@ export default function Upload() {
     return baseTitle;
   };
 
-  const handleUploadSuccess = () => {
+  const handleUploadSuccess = (videoId: string) => {
     setToast({
-      message: 'Video uploaded successfully! Processing your form analysis...',
+      message: 'Video uploaded successfully! Redirecting to analysis...',
       type: 'success',
     });
+    // Navigation is handled in VideoUpload component
   };
 
   const handleError = (error: string) => {
