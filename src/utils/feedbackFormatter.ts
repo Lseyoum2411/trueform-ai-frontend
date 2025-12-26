@@ -82,8 +82,10 @@ export function formatFeedbackItem(item: Partial<FeedbackItem>, fallbackKey?: st
   const title = formatFeedbackTitle(aspectKey, item.aspect);
   const description = formatFeedbackDescription(aspectKey, item.message || '', item.severity || 'medium');
   const priority = mapSeverityToPriority(item.severity || 'medium');
-  const recommendation = item.recommendation 
-    ? formatRecommendation(aspectKey, item.recommendation)
+  // Check if recommendation exists on item (it may not be in FeedbackItem type)
+  const itemWithRecommendation = item as Partial<FeedbackItem> & { recommendation?: string };
+  const recommendation = itemWithRecommendation.recommendation 
+    ? formatRecommendation(aspectKey, itemWithRecommendation.recommendation)
     : (item.severity !== 'positive' && item.severity !== 'info' ? formatRecommendation(aspectKey) : undefined);
 
   return {
