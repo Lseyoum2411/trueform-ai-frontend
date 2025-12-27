@@ -406,8 +406,9 @@ export default function Results() {
                         </span>
                       </div>
 
-                      {/* Check if this is structured actionable feedback (basketball) */}
-                      {feedback.observation || feedback.impact || feedback.how_to_fix || feedback.drill || feedback.coaching_cue ? (
+                      {/* Check if this is structured actionable feedback (basketball or weightlifting) */}
+                      {(feedback.observation || feedback.impact || feedback.how_to_fix || feedback.drill || feedback.coaching_cue) ||
+                       (feedback.what_we_saw || feedback.what_it_should_feel_like || feedback.common_mistake || feedback.self_check) ? (
                         // Structured actionable feedback display
                         <div className="space-y-4">
                           {/* Observation */}

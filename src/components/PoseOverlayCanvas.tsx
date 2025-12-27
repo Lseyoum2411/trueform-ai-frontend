@@ -169,3 +169,4 @@ export const PoseOverlayCanvas: React.FC<PoseOverlayCanvasProps> = ({
   return null; // This component doesn't render anything itself
 };
 
+

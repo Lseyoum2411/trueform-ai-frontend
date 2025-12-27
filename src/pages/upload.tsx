@@ -43,6 +43,7 @@ export default function Upload() {
         rdl: 'Romanian Deadlift',
         bench_press: 'Bench Press',
         barbell_row: 'Barbell Row',
+        dumbbell_row: 'Dumbbell Row',
         lat_pulldown: 'Lat Pulldown',
       };
       return `${baseTitle} - ${exerciseNames[exerciseType] || exerciseType}`;

@@ -56,6 +56,11 @@ export interface FeedbackItem {
   drill?: string;
   coaching_cue?: string;
   recommendation?: string;
+  // Optional structured fields for beginner-friendly weightlifting feedback
+  what_we_saw?: string;
+  what_it_should_feel_like?: string;
+  common_mistake?: string;
+  self_check?: string;
 }
 
 // Pose landmark coordinates (x, y, z normalized 0-1)

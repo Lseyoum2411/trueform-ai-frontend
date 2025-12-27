@@ -49,6 +49,7 @@ const FALLBACK_SPORTS: SportInfo[] = [
       { id: 'rdl', name: 'RDL', description: 'Romanian deadlift' },
       { id: 'bench_press', name: 'Bench Press', description: 'Chest press' },
       { id: 'barbell_row', name: 'Barbell Row', description: 'Bent-over row' },
+      { id: 'dumbbell_row', name: 'Dumbbell Row', description: 'Single or two-arm dumbbell row' },
       { id: 'lat_pulldown', name: 'Lat Pulldown', description: 'Lat pulldown' },
     ],
   },

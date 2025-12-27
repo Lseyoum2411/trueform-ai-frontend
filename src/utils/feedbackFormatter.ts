@@ -18,6 +18,11 @@ export interface FormattedFeedback {
   how_to_fix?: string[];
   drill?: string;
   coaching_cue?: string;
+  // Structured fields for beginner-friendly weightlifting feedback
+  what_we_saw?: string;
+  what_it_should_feel_like?: string;
+  common_mistake?: string;
+  self_check?: string;
 }
 
 /**
@@ -87,12 +92,17 @@ export function formatFeedbackItem(item: Partial<FeedbackItem>, fallbackKey?: st
   const aspectKey = item.aspect || item.category || fallbackKey || 'performance';
   const title = formatFeedbackTitle(aspectKey, item.aspect);
   
-  // Use structured fields if available (basketball actionable feedback)
-  const hasStructuredData = !!(item.observation || item.impact || item.how_to_fix || item.drill || item.coaching_cue);
+  // Use structured fields if available (basketball actionable feedback or weightlifting beginner-friendly feedback)
+  const hasBasketballData = !!(item.observation || item.impact || item.how_to_fix || item.drill || item.coaching_cue);
+  const hasWeightliftingData = !!(item.what_we_saw || item.what_it_should_feel_like || item.common_mistake || item.self_check);
+  const hasStructuredData = hasBasketballData || hasWeightliftingData;
   
   let description: string;
-  if (hasStructuredData && item.observation) {
-    // Use observation as the description for structured feedback
+  if (hasWeightliftingData && item.what_we_saw) {
+    // Use what_we_saw as the description for weightlifting beginner-friendly feedback
+    description = item.what_we_saw;
+  } else if (hasBasketballData && item.observation) {
+    // Use observation as the description for basketball structured feedback
     description = item.observation;
   } else {
     description = formatFeedbackDescription(aspectKey, item.message || '', item.severity || 'medium');
@@ -128,6 +138,11 @@ export function formatFeedbackItem(item: Partial<FeedbackItem>, fallbackKey?: st
     how_to_fix: item.how_to_fix,
     drill: item.drill,
     coaching_cue: item.coaching_cue,
+    // Weightlifting beginner-friendly fields
+    what_we_saw: item.what_we_saw,
+    what_it_should_feel_like: item.what_it_should_feel_like,
+    common_mistake: item.common_mistake,
+    self_check: item.self_check,
   };
 }
 
