@@ -1,25 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { Layout } from '@/components/Layout';
-import { SportCard } from '@/components/SportCard';
+// SportCard removed - using inline buttons to support all sports
 import { ExerciseSelector } from '@/components/ExerciseSelector';
 import { SportInfo, ExerciseType } from '@/types';
 import axios from 'axios';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
-const GOLF_EXERCISE_TYPES: ExerciseType[] = [
-  {
-    id: 'driver',
-    name: 'Driver Swing',
-    description: 'Full power drive from tee',
-  },
-  {
-    id: 'iron',
-    name: 'Iron Swing',
-    description: 'Iron shot swing analysis',
-  },
-];
+// Fallback removed - now using API data directly with normalized movement IDs
 
 // Fallback sports data in case API is unavailable
 const FALLBACK_SPORTS: SportInfo[] = [
@@ -66,6 +55,39 @@ const FALLBACK_SPORTS: SportInfo[] = [
       { id: 'fielding', name: 'Fielding', description: 'Fielding stance and mechanics' },
     ],
   },
+  {
+    id: 'soccer',
+    name: 'Soccer',
+    description: 'Analyze your soccer technique',
+    requires_exercise_type: true,
+    exercise_types: [
+      { id: 'shooting_technique', name: 'Shooting Technique', description: 'Shooting the ball at goal' },
+      { id: 'passing_technique', name: 'Passing Technique', description: 'Passing the ball to a teammate' },
+      { id: 'crossing_technique', name: 'Crossing Technique', description: 'Crossing the ball from wide areas' },
+    ],
+  },
+  {
+    id: 'track_field',
+    name: 'Track & Field',
+    description: 'Analyze your running form',
+    requires_exercise_type: true,
+    exercise_types: [
+      { id: 'sprint_start', name: 'Sprint Start', description: 'Starting technique from blocks' },
+      { id: 'acceleration_phase', name: 'Acceleration Phase', description: 'Accelerating from start to top speed' },
+      { id: 'max_velocity_sprint', name: 'Max Velocity Sprint', description: 'Maintaining maximum sprint speed' },
+    ],
+  },
+  {
+    id: 'volleyball',
+    name: 'Volleyball',
+    description: 'Analyze your volleyball technique',
+    requires_exercise_type: true,
+    exercise_types: [
+      { id: 'spike_approach', name: 'Spike Approach', description: 'Approach and jumping for a spike attack' },
+      { id: 'jump_serve', name: 'Jump Serve', description: 'Serving with a jump and power' },
+      { id: 'blocking_jump', name: 'Blocking Jump', description: 'Jumping to block opponent\'s attack' },
+    ],
+  },
 ];
 
 export default function SelectSport() {
@@ -84,15 +106,8 @@ export default function SelectSport() {
           timeout: 5000, // 5 second timeout
         });
         
-        const sportsData = response.data.map((sport) => {
-          if (sport.id === 'golf') {
-            return {
-              ...sport,
-              exercise_types: GOLF_EXERCISE_TYPES,
-            };
-          }
-          return sport;
-        });
+        // Use sports data directly from API (includes all normalized movements)
+        const sportsData = response.data;
         setSports(sportsData);
       } catch (err: any) {
         console.error('Failed to fetch sports:', err);
@@ -123,8 +138,9 @@ export default function SelectSport() {
     setSelectedSport(sport);
     setSelectedExercise(null);
 
-    if (sport.id === 'basketball') {
-      router.push(`/upload?sport=basketball&exercise_type=jumpshot`);
+    // If sport has exercise types and only one option, go directly to upload
+    if (sport.exercise_types && sport.exercise_types.length === 1) {
+      router.push(`/upload?sport=${sport.id}&exercise_type=${sport.exercise_types[0].id}`);
     }
   };
 
@@ -192,13 +208,34 @@ export default function SelectSport() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {sports.map((sport: SportInfo) => (
-                  <SportCard
+                  <button
                     key={sport.id}
-                    sport={sport.id as any}
-                    title={sport.name}
-                    description={sport.description}
                     onClick={() => handleSportSelect(sport.id)}
-                  />
+                    className="w-full p-6 bg-dark-surface border border-dark-border rounded-lg hover:border-blue-500 hover:bg-dark-surface/80 transition-all duration-200 text-left group"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className="text-4xl">
+                        {sport.id === 'basketball' ? '🏀' :
+                         sport.id === 'golf' ? '⛳' :
+                         sport.id === 'weightlifting' ? '🏋️' :
+                         sport.id === 'baseball' ? '⚾' :
+                         sport.id === 'soccer' ? '⚽' :
+                         sport.id === 'track_field' ? '🏃' :
+                         sport.id === 'volleyball' ? '🏐' : '🎯'}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-xl font-semibold text-white group-hover:text-blue-400 transition-colors">
+                          {sport.name}
+                        </h3>
+                        {sport.description && (
+                          <p className="text-gray-400 mt-1 text-sm">{sport.description}</p>
+                        )}
+                      </div>
+                      <div className="text-gray-400 group-hover:text-blue-400 transition-colors">
+                        →
+                      </div>
+                    </div>
+                  </button>
                 ))}
               </div>
             )}

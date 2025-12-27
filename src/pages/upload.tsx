@@ -17,42 +17,72 @@ export default function Upload() {
   const exerciseType = exercise_type as string;
 
   useEffect(() => {
-    if (!sport || !['basketball', 'golf', 'weightlifting', 'baseball'].includes(sport as string)) {
+    if (!sport || !['basketball', 'golf', 'weightlifting', 'baseball', 'soccer', 'track_field', 'volleyball'].includes(sport as string)) {
       router.push('/select-sport');
     }
   }, [sport, router]);
 
   const getSportTitle = (sport: string, exerciseType?: string): string => {
     const titles: Record<string, string> = {
-      basketball: 'Basketball Jump Shot',
-      golf: 'Golf Swing',
+      basketball: 'Basketball',
+      golf: 'Golf',
       weightlifting: 'Weightlifting',
       baseball: 'Baseball',
+      soccer: 'Soccer',
+      track_field: 'Track & Field',
+      volleyball: 'Volleyball',
     };
     
     const baseTitle = titles[sport] || 'Upload Video';
     
-    if (exerciseType && exerciseType !== 'jumpshot') {
+    if (exerciseType) {
+      // Use display names from the registry (normalized IDs)
       const exerciseNames: Record<string, string> = {
-        driver: 'Driver',
-        fairway: 'Fairway Wood',
-        chip: 'Chip Shot',
-        putt: 'Putt',
-        back_squat: 'Back Squat',
+        // Basketball
+        catch_and_shoot: 'Catch and Shoot',
+        shot_off_dribble: 'Shot Off the Dribble',
+        free_throw: 'Free Throw',
+        jumpshot: 'Jump Shot', // Legacy support
+        // Golf
+        driver_swing: 'Driver Swing',
+        driver: 'Driver Swing', // Legacy support
+        iron_swing: 'Iron Swing',
+        fairway: 'Iron Swing', // Legacy mapping
+        chip_shot: 'Chip Shot',
+        chip: 'Chip Shot', // Legacy support
+        putting_stroke: 'Putting Stroke',
+        putt: 'Putting Stroke', // Legacy support
+        // Weightlifting
+        barbell_squat: 'Barbell Squat',
+        back_squat: 'Barbell Squat', // Legacy support
         front_squat: 'Front Squat',
         deadlift: 'Deadlift',
-        rdl: 'Romanian Deadlift',
+        romanian_deadlift: 'Romanian Deadlift',
+        rdl: 'Romanian Deadlift', // Legacy support
         bench_press: 'Bench Press',
         barbell_row: 'Barbell Row',
         dumbbell_row: 'Dumbbell Row',
-        rear_delt_flies: 'Rear Delt Flies',
         lat_pulldown: 'Lat Pulldown',
+        // Baseball
         pitching: 'Pitching',
         batting: 'Batting',
         catcher: 'Catcher',
         fielding: 'Fielding',
+        // Soccer
+        shooting_technique: 'Shooting Technique',
+        passing_technique: 'Passing Technique',
+        crossing_technique: 'Crossing Technique',
+        // Track & Field
+        sprint_start: 'Sprint Start',
+        acceleration_phase: 'Acceleration Phase',
+        max_velocity_sprint: 'Max Velocity Sprint',
+        // Volleyball
+        spike_approach: 'Spike Approach',
+        jump_serve: 'Jump Serve',
+        blocking_jump: 'Blocking Jump',
       };
-      return `${baseTitle} - ${exerciseNames[exerciseType] || exerciseType}`;
+      const exerciseName = exerciseNames[exerciseType] || exerciseType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      return `${baseTitle} - ${exerciseName}`;
     }
     
     return baseTitle;

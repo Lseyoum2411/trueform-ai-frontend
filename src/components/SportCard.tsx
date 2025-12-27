@@ -8,11 +8,14 @@ interface SportCardProps {
   onClick: () => void;
 }
 
-const sportIcons: Record<Sport, string> = {
+const sportIcons: Record<string, string> = {
   basketball: '🏀',
   golf: '⛳',
   weightlifting: '🏋️',
   baseball: '⚾',
+  soccer: '⚽',
+  track_field: '🏃',
+  volleyball: '🏐',
 };
 
 export const SportCard: React.FC<SportCardProps> = ({
