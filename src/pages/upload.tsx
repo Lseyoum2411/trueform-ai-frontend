@@ -17,7 +17,7 @@ export default function Upload() {
   const exerciseType = exercise_type as string;
 
   useEffect(() => {
-    if (!sport || !['basketball', 'golf', 'weightlifting'].includes(sport as string)) {
+    if (!sport || !['basketball', 'golf', 'weightlifting', 'baseball'].includes(sport as string)) {
       router.push('/select-sport');
     }
   }, [sport, router]);
@@ -27,6 +27,7 @@ export default function Upload() {
       basketball: 'Basketball Jump Shot',
       golf: 'Golf Swing',
       weightlifting: 'Weightlifting',
+      baseball: 'Baseball',
     };
     
     const baseTitle = titles[sport] || 'Upload Video';
@@ -44,7 +45,12 @@ export default function Upload() {
         bench_press: 'Bench Press',
         barbell_row: 'Barbell Row',
         dumbbell_row: 'Dumbbell Row',
+        rear_delt_flies: 'Rear Delt Flies',
         lat_pulldown: 'Lat Pulldown',
+        pitching: 'Pitching',
+        batting: 'Batting',
+        catcher: 'Catcher',
+        fielding: 'Fielding',
       };
       return `${baseTitle} - ${exerciseNames[exerciseType] || exerciseType}`;
     }

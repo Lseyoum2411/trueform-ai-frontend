@@ -12,6 +12,7 @@ const sportIcons: Record<Sport, string> = {
   basketball: '🏀',
   golf: '⛳',
   weightlifting: '🏋️',
+  baseball: '⚾',
 };
 
 export const SportCard: React.FC<SportCardProps> = ({
