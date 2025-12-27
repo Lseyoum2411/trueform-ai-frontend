@@ -49,6 +49,13 @@ export interface FeedbackItem {
   message: string;
   severity: string;
   timestamp: number | null;
+  // Optional structured fields for actionable recommendations (basketball-specific)
+  observation?: string;
+  impact?: string;
+  how_to_fix?: string[];
+  drill?: string;
+  coaching_cue?: string;
+  recommendation?: string;
 }
 
 // Pose landmark coordinates (x, y, z normalized 0-1)

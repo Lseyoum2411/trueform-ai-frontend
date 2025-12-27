@@ -12,6 +12,12 @@ export interface FormattedFeedback {
   priority: 'low' | 'medium' | 'high';
   recommendation?: string;
   timestamp?: number;
+  // Structured fields for actionable recommendations (basketball-specific)
+  observation?: string;
+  impact?: string;
+  how_to_fix?: string[];
+  drill?: string;
+  coaching_cue?: string;
 }
 
 /**
@@ -80,13 +86,34 @@ export function formatMetricLabel(key: string): string {
 export function formatFeedbackItem(item: Partial<FeedbackItem>, fallbackKey?: string): FormattedFeedback {
   const aspectKey = item.aspect || item.category || fallbackKey || 'performance';
   const title = formatFeedbackTitle(aspectKey, item.aspect);
-  const description = formatFeedbackDescription(aspectKey, item.message || '', item.severity || 'medium');
+  
+  // Use structured fields if available (basketball actionable feedback)
+  const hasStructuredData = !!(item.observation || item.impact || item.how_to_fix || item.drill || item.coaching_cue);
+  
+  let description: string;
+  if (hasStructuredData && item.observation) {
+    // Use observation as the description for structured feedback
+    description = item.observation;
+  } else {
+    description = formatFeedbackDescription(aspectKey, item.message || '', item.severity || 'medium');
+  }
+  
   const priority = mapSeverityToPriority(item.severity || 'medium');
-  // Check if recommendation exists on item (it may not be in FeedbackItem type)
-  const itemWithRecommendation = item as Partial<FeedbackItem> & { recommendation?: string };
-  const recommendation = itemWithRecommendation.recommendation 
-    ? formatRecommendation(aspectKey, itemWithRecommendation.recommendation)
-    : (item.severity !== 'positive' && item.severity !== 'info' ? formatRecommendation(aspectKey) : undefined);
+  
+  // For structured feedback, use the structured fields directly
+  // For non-structured feedback, generate recommendation if needed
+  let recommendation: string | undefined;
+  if (hasStructuredData) {
+    // Structured feedback - recommendation is built from how_to_fix, drill, and cue
+    // Will be displayed separately in the UI
+    recommendation = undefined;
+  } else {
+    // Legacy/non-structured feedback - use recommendation field or generate one
+    const itemWithRecommendation = item as Partial<FeedbackItem> & { recommendation?: string };
+    recommendation = itemWithRecommendation.recommendation 
+      ? formatRecommendation(aspectKey, itemWithRecommendation.recommendation)
+      : (item.severity !== 'positive' && item.severity !== 'info' ? formatRecommendation(aspectKey) : undefined);
+  }
 
   return {
     type: (item.severity === 'positive' || item.severity === 'info') ? 'positive' : 'issue',
@@ -95,6 +122,12 @@ export function formatFeedbackItem(item: Partial<FeedbackItem>, fallbackKey?: st
     priority,
     recommendation,
     timestamp: item.timestamp || undefined,
+    // Include structured fields if available
+    observation: item.observation,
+    impact: item.impact,
+    how_to_fix: item.how_to_fix,
+    drill: item.drill,
+    coaching_cue: item.coaching_cue,
   };
 }
 

@@ -337,6 +337,16 @@ export default function Results() {
         <div className="space-y-8">
           <h2 className="text-2xl font-bold text-white">Feedback & Recommendations</h2>
 
+          {/* Basketball Jumpshot Disclaimer */}
+          {analysisResult.sport === 'basketball' && analysisResult.exercise_type === 'jumpshot' && (
+            <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-white mb-3">Before You Make Changes</h3>
+              <p className="text-gray-300 leading-relaxed">
+                If you are already shooting at a high percentage in games, there may be no need to change your jumpshot. Many effective shooters succeed with mechanics that are unique to them.
+              </p>
+            </div>
+          )}
+
           {/* Strengths Section */}
           {strengths.length > 0 && (
             <div className="space-y-4">
@@ -395,12 +405,66 @@ export default function Results() {
                           {priorityLabels[feedback.priority]}
                         </span>
                       </div>
-                      <p className="text-gray-200 leading-relaxed mb-3">{feedback.description}</p>
-                      {feedback.recommendation && (
-                        <div className="mt-3 pt-3 border-t border-gray-700/50">
-                          <p className="text-sm text-blue-300 font-medium">💡 Recommendation</p>
-                          <p className="text-gray-300 mt-1">{feedback.recommendation}</p>
+
+                      {/* Check if this is structured actionable feedback (basketball) */}
+                      {feedback.observation || feedback.impact || feedback.how_to_fix || feedback.drill || feedback.coaching_cue ? (
+                        // Structured actionable feedback display
+                        <div className="space-y-4">
+                          {/* Observation */}
+                          {feedback.observation && (
+                            <div>
+                              <p className="text-sm text-gray-400 font-medium mb-1">Observation</p>
+                              <p className="text-gray-200 leading-relaxed">{feedback.observation}</p>
+                            </div>
+                          )}
+                          
+                          {/* Impact */}
+                          {feedback.impact && (
+                            <div>
+                              <p className="text-sm text-gray-400 font-medium mb-1">Impact</p>
+                              <p className="text-gray-200 leading-relaxed">{feedback.impact}</p>
+                            </div>
+                          )}
+                          
+                          {/* How to Fix */}
+                          {feedback.how_to_fix && feedback.how_to_fix.length > 0 && (
+                            <div>
+                              <p className="text-sm text-gray-400 font-medium mb-2">How to Fix</p>
+                              <ul className="list-disc list-inside space-y-1 text-gray-200">
+                                {feedback.how_to_fix.map((fix, fixIndex) => (
+                                  <li key={fixIndex} className="leading-relaxed">{fix}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          
+                          {/* Drill */}
+                          {feedback.drill && (
+                            <div className="pt-2 border-t border-gray-700/50">
+                              <p className="text-sm text-blue-300 font-medium mb-1">💡 Drill</p>
+                              <p className="text-gray-200 leading-relaxed">{feedback.drill}</p>
+                            </div>
+                          )}
+                          
+                          {/* Coaching Cue */}
+                          {feedback.coaching_cue && (
+                            <div className="pt-2 border-t border-gray-700/50">
+                              <p className="text-sm text-amber-300 font-medium mb-1">🎯 Coaching Cue</p>
+                              <p className="text-gray-200 leading-relaxed font-semibold italic">{feedback.coaching_cue}</p>
+                            </div>
+                          )}
                         </div>
+                      ) : (
+                        // Legacy/non-structured feedback display
+                        <>
+                          <p className="text-gray-200 leading-relaxed mb-3">{feedback.description}</p>
+                          {feedback.recommendation && (
+                            <div className="mt-3 pt-3 border-t border-gray-700/50">
+                              <p className="text-sm text-blue-300 font-medium">💡 Recommendation</p>
+                              <p className="text-gray-300 mt-1">{feedback.recommendation}</p>
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
                   );
