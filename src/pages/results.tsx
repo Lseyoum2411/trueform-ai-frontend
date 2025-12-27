@@ -419,23 +419,47 @@ export default function Results() {
                             </div>
                           )}
                           
-                          {/* Impact */}
+                          {/* Impact / Why It Matters */}
                           {feedback.impact && (
                             <div>
-                              <p className="text-sm text-gray-400 font-medium mb-1">Impact</p>
+                              <p className="text-sm text-gray-400 font-medium mb-1">Why It Matters</p>
                               <p className="text-gray-200 leading-relaxed">{feedback.impact}</p>
                             </div>
                           )}
                           
-                          {/* How to Fix */}
+                          {/* Weightlifting: What We Saw */}
+                          {feedback.what_we_saw && (
+                            <div>
+                              <p className="text-sm text-blue-300 font-medium mb-1">What We Saw</p>
+                              <p className="text-gray-200 leading-relaxed">{feedback.what_we_saw}</p>
+                            </div>
+                          )}
+                          
+                          {/* How to Fix / How To Fix It */}
                           {feedback.how_to_fix && feedback.how_to_fix.length > 0 && (
                             <div>
-                              <p className="text-sm text-gray-400 font-medium mb-2">How to Fix</p>
+                              <p className="text-sm text-blue-300 font-medium mb-2">{feedback.observation ? 'What To Do' : 'How To Fix It'}</p>
                               <ul className="list-disc list-inside space-y-1 text-gray-200">
                                 {feedback.how_to_fix.map((fix, fixIndex) => (
                                   <li key={fixIndex} className="leading-relaxed">{fix}</li>
                                 ))}
                               </ul>
+                            </div>
+                          )}
+                          
+                          {/* Weightlifting: What It Should Feel Like */}
+                          {feedback.what_it_should_feel_like && (
+                            <div>
+                              <p className="text-sm text-blue-300 font-medium mb-1">What It Should Feel Like</p>
+                              <p className="text-gray-200 leading-relaxed">{feedback.what_it_should_feel_like}</p>
+                            </div>
+                          )}
+                          
+                          {/* Weightlifting: Common Mistake To Avoid */}
+                          {feedback.common_mistake && (
+                            <div>
+                              <p className="text-sm text-blue-300 font-medium mb-1">Common Mistake To Avoid</p>
+                              <p className="text-gray-200 leading-relaxed">{feedback.common_mistake}</p>
                             </div>
                           )}
                           
@@ -452,6 +476,14 @@ export default function Results() {
                             <div className="pt-2 border-t border-gray-700/50">
                               <p className="text-sm text-amber-300 font-medium mb-1">🎯 Coaching Cue</p>
                               <p className="text-gray-200 leading-relaxed font-semibold italic">{feedback.coaching_cue}</p>
+                            </div>
+                          )}
+                          
+                          {/* Weightlifting: Quick Self-Check */}
+                          {feedback.self_check && (
+                            <div className="pt-2 border-t border-gray-700/50">
+                              <p className="text-sm text-blue-300 font-medium mb-1">Quick Self-Check</p>
+                              <p className="text-gray-200 leading-relaxed">{feedback.self_check}</p>
                             </div>
                           )}
                         </div>
