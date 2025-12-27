@@ -1,7 +1,7 @@
 import React from 'react';
 import { useRouter } from 'next/router';
 import { Layout } from '@/components/Layout';
-import { HeroSection } from '@/components/ui/hero-section-dark';
+import { Hero7 } from '@/components/ui/modern-hero';
 
 export default function Home() {
   const router = useRouter();
@@ -12,25 +12,22 @@ export default function Home() {
 
   return (
     <Layout>
-      <HeroSection
-        title="Welcome to FormLab"
-        subtitle={{
-          regular: "Upload your shot, swing, or lift — get ",
-          gradient: "instant AI form feedback",
+      <Hero7
+        heading="Transform Your Athletic Performance with AI-Powered Form Analysis"
+        description="Upload your shot, swing, or lift — get instant AI form feedback. Get personalized coaching for basketball, golf, weightlifting, and baseball."
+        button={{
+          text: "Get Started",
+          onClick: handleGetStarted,
         }}
-        description="Transform your athletic performance with AI-powered form analysis. Get personalized coaching feedback for basketball, golf, weightlifting, and baseball in seconds."
-        ctaText="Get Started"
-        onCtaClick={handleGetStarted}
-        bottomImage={{
-          light: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1920&h=1080&fit=crop",
-          dark: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1920&h=1080&fit=crop",
-        }}
-        gridOptions={{
-          angle: 65,
-          opacity: 0.4,
-          cellSize: 50,
-          lightLineColor: "#4a4a4a",
-          darkLineColor: "#2a2a2a",
+        reviews={{
+          count: 5000,
+          sports: [
+            { emoji: "🏀", alt: "Basketball" },
+            { emoji: "⛳", alt: "Golf" },
+            { emoji: "🏋️", alt: "Weightlifting" },
+            { emoji: "⚾", alt: "Baseball" },
+            { emoji: "🎯", alt: "Sports" },
+          ],
         }}
       />
     </Layout>
