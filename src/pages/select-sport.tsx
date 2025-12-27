@@ -50,7 +50,20 @@ const FALLBACK_SPORTS: SportInfo[] = [
       { id: 'bench_press', name: 'Bench Press', description: 'Chest press' },
       { id: 'barbell_row', name: 'Barbell Row', description: 'Bent-over row' },
       { id: 'dumbbell_row', name: 'Dumbbell Row', description: 'Single or two-arm dumbbell row' },
+      { id: 'rear_delt_flies', name: 'Rear Delt Flies', description: 'Rear deltoid isolation exercise' },
       { id: 'lat_pulldown', name: 'Lat Pulldown', description: 'Lat pulldown' },
+    ],
+  },
+  {
+    id: 'baseball',
+    name: 'Baseball',
+    description: 'Analyze your baseball form',
+    requires_exercise_type: true,
+    exercise_types: [
+      { id: 'pitching', name: 'Pitching', description: 'Pitching form and mechanics' },
+      { id: 'batting', name: 'Batting', description: 'Batting stance and swing' },
+      { id: 'catcher', name: 'Catcher', description: 'Catching form and positioning' },
+      { id: 'fielding', name: 'Fielding', description: 'Fielding stance and mechanics' },
     ],
   },
 ];
