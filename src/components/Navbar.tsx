@@ -11,8 +11,9 @@ export const Navbar: React.FC = () => {
             <Image 
               src="/formlab-logo.png" 
               alt="FormLab logo" 
-              width={32} 
-              height={32} 
+              width={48} 
+              height={48} 
+              className="h-10 w-auto md:h-12 md:w-auto"
             />
             <span className="text-xl font-bold text-white">FormLab</span>
           </Link>
