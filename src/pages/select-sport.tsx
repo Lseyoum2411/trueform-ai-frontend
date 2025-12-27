@@ -8,23 +8,30 @@ import axios from 'axios';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
-// Fallback removed - now using API data directly with normalized movement IDs
-
 // Fallback sports data in case API is unavailable
 const FALLBACK_SPORTS: SportInfo[] = [
   {
     id: 'basketball',
     name: 'Basketball',
     description: 'Analyze your shooting form',
-    requires_exercise_type: false,
-    exercise_types: [],
+    requires_exercise_type: true,
+    exercise_types: [
+      { id: 'catch_and_shoot', name: 'Catch and Shoot', description: 'Shooting immediately after receiving a pass' },
+      { id: 'shot_off_dribble', name: 'Shot Off the Dribble', description: 'Creating and shooting a jumpshot after dribbling' },
+      { id: 'free_throw', name: 'Free Throw', description: 'Shooting from the free throw line with no defenders' },
+    ],
   },
   {
     id: 'golf',
     name: 'Golf',
     description: 'Perfect your swing',
     requires_exercise_type: true,
-    exercise_types: GOLF_EXERCISE_TYPES,
+    exercise_types: [
+      { id: 'driver_swing', name: 'Driver Swing', description: 'Full power drive from tee' },
+      { id: 'iron_swing', name: 'Iron Swing', description: 'Iron shot swing with controlled trajectory' },
+      { id: 'chip_shot', name: 'Chip Shot', description: 'Short approach shot near the green' },
+      { id: 'putting_stroke', name: 'Putting Stroke', description: 'Putting stroke on the green' },
+    ],
   },
   {
     id: 'weightlifting',
