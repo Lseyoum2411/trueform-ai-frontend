@@ -10,10 +10,9 @@ export const Navbar: React.FC = () => {
           <Link href="/" className="flex items-center space-x-2">
             <Image 
               src="/formlab-logo.png" 
-              alt="FormLab" 
+              alt="FormLab logo" 
               width={32} 
               height={32} 
-              className="object-contain w-7 h-7 md:w-8 md:h-8" 
             />
             <span className="text-xl font-bold text-white">FormLab</span>
           </Link>
