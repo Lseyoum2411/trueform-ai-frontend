@@ -8,7 +8,7 @@ export const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center space-x-2">
-            <Image src="/logo.svg" alt="FormLab" width={40} height={40} />
+            <Image src="/logo.svg" alt="FormLab" width={48} height={56} className="object-contain" />
             <span className="text-xl font-bold text-white">FormLab</span>
           </Link>
           <div className="flex space-x-4">
