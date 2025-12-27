@@ -13,8 +13,6 @@ export const Navbar: React.FC = () => {
               alt="FormLab logo" 
               width={32} 
               height={32} 
-              className="inline-flex"
-              style={{ backgroundColor: 'transparent' }}
             />
             <span className="text-xl font-bold text-white">FormLab</span>
           </Link>
