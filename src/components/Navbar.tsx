@@ -9,10 +9,12 @@ export const Navbar: React.FC = () => {
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center space-x-2">
             <Image 
-              src="/formlab-logo.png.png" 
+              src="/formlab-logo.png" 
               alt="FormLab logo" 
               width={32} 
               height={32} 
+              className="inline-flex"
+              style={{ backgroundColor: 'transparent' }}
             />
             <span className="text-xl font-bold text-white">FormLab</span>
           </Link>
