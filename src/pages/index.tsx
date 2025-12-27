@@ -1,6 +1,7 @@
 import React from 'react';
 import { useRouter } from 'next/router';
 import { Layout } from '@/components/Layout';
+import { HeroSection } from '@/components/ui/hero-section-dark';
 
 export default function Home() {
   const router = useRouter();
@@ -11,20 +12,27 @@ export default function Home() {
 
   return (
     <Layout>
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-8">
-        <div className="space-y-4">
-          <h1 className="text-5xl font-bold text-white">FormLab</h1>
-          <p className="text-xl text-gray-400 max-w-2xl">
-            Upload your shot, swing, or lift — get instant AI form feedback
-          </p>
-        </div>
-        <button
-          onClick={handleGetStarted}
-          className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors shadow-lg"
-        >
-          Get Started
-        </button>
-      </div>
+      <HeroSection
+        title="Welcome to FormLab"
+        subtitle={{
+          regular: "Upload your shot, swing, or lift — get ",
+          gradient: "instant AI form feedback",
+        }}
+        description="Transform your athletic performance with AI-powered form analysis. Get personalized coaching feedback for basketball, golf, weightlifting, and baseball in seconds."
+        ctaText="Get Started"
+        onCtaClick={handleGetStarted}
+        bottomImage={{
+          light: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1920&h=1080&fit=crop",
+          dark: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1920&h=1080&fit=crop",
+        }}
+        gridOptions={{
+          angle: 65,
+          opacity: 0.4,
+          cellSize: 50,
+          lightLineColor: "#4a4a4a",
+          darkLineColor: "#2a2a2a",
+        }}
+      />
     </Layout>
   );
 }

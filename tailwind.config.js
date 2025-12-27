@@ -12,6 +12,9 @@ module.exports = {
           border: '#2a2a2a',
         },
       },
+      fontFamily: {
+        geist: ['system-ui', '-apple-system', 'sans-serif'],
+      },
     },
   },
   plugins: [],
