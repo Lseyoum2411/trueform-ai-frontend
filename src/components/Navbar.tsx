@@ -13,7 +13,7 @@ export const Navbar: React.FC = () => {
               alt="FormLab" 
               width={32} 
               height={32} 
-              className="object-contain w-8 h-8 md:w-8 md:h-8 w-7 h-7" 
+              className="object-contain w-7 h-7 md:w-8 md:h-8" 
             />
             <span className="text-xl font-bold text-white">FormLab</span>
           </Link>
@@ -30,8 +30,3 @@ export const Navbar: React.FC = () => {
     </nav>
   );
 };
-
-
-
-
-
