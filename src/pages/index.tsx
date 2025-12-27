@@ -13,7 +13,7 @@ export default function Home() {
     <Layout>
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-8">
         <div className="space-y-4">
-          <h1 className="text-5xl font-bold text-white">TrueForm AI</h1>
+          <h1 className="text-5xl font-bold text-white">FormLab</h1>
           <p className="text-xl text-gray-400 max-w-2xl">
             Upload your shot, swing, or lift — get instant AI form feedback
           </p>
@@ -28,6 +28,7 @@ export default function Home() {
     </Layout>
   );
 }
+
 
 
 

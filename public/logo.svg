@@ -1,8 +1,41 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <circle cx="50" cy="50" r="40" fill="#3b82f6"/>
-  <text x="50" y="60" font-family="Arial" font-size="40" fill="white" text-anchor="middle" font-weight="bold">TF</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 240" fill="none">
+  <!-- Circular background -->
+  <circle cx="100" cy="100" r="95" fill="#1e3a8a" stroke="white" stroke-width="3"/>
+  
+  <!-- Abstract movement lines (swooshes) -->
+  <path d="M 20 80 Q 50 60, 80 70 T 140 75 T 180 80" stroke="#32cd32" stroke-width="4" fill="none" opacity="0.6"/>
+  <path d="M 25 100 Q 55 85, 85 95 T 145 100 T 175 105" stroke="#7fff00" stroke-width="3" fill="none" opacity="0.4"/>
+  
+  <!-- Basketball player (left) -->
+  <g transform="translate(35, 45)">
+    <circle cx="15" cy="45" r="12" fill="#1e3a8a" stroke="white" stroke-width="1.5"/>
+    <rect x="8" y="52" width="14" height="25" fill="#1e3a8a" stroke="white" stroke-width="1.5"/>
+    <circle cx="15" cy="15" r="8" fill="#1e3a8a" stroke="white" stroke-width="1.5"/>
+    <path d="M 8 22 L 5 12 L 3 8" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <path d="M 22 22 L 25 12 L 27 8" stroke="white" stroke-width="2" fill="none" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Golfer (middle) -->
+  <g transform="translate(75, 30)">
+    <circle cx="25" cy="35" r="10" fill="#1e3a8a" stroke="white" stroke-width="1.5"/>
+    <path d="M 20 42 L 18 55 L 20 68" stroke="white" stroke-width="2" fill="none"/>
+    <path d="M 30 42 L 32 55 L 30 68" stroke="white" stroke-width="2" fill="none"/>
+    <path d="M 15 40 Q 20 25, 35 20" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <rect x="18" y="35" width="14" height="12" fill="#1e3a8a" stroke="white" stroke-width="1.5"/>
+  </g>
+  
+  <!-- Weightlifter (right) -->
+  <g transform="translate(130, 50)">
+    <circle cx="20" cy="40" r="11" fill="#1e3a8a" stroke="white" stroke-width="1.5"/>
+    <rect x="13" y="47" width="14" height="30" fill="#1e3a8a" stroke="white" stroke-width="1.5"/>
+    <path d="M 10 52 L 8 55 L 6 60" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <path d="M 30 52 L 32 55 L 34 60" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <path d="M 6 60 L 34 60" stroke="white" stroke-width="2.5" fill="none"/>
+  </g>
+  
+  <!-- FormLab text banner -->
+  <rect x="0" y="185" width="200" height="55" fill="#1e3a8a"/>
+  <text x="100" y="220" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="white" text-anchor="middle">
+    <tspan fill="white">Form</tspan><tspan fill="#32cd32">Lab</tspan>
+  </text>
 </svg>
-
-
-
-
