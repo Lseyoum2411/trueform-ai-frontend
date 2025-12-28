@@ -1,11 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   motion, 
   useMotionValue, 
   useMotionTemplate, 
   useAnimationFrame 
 } from "framer-motion";
-import { MousePointerClick, Info, Settings2 } from 'lucide-react';
+import { MousePointerClick, Info, Sun, Moon, Settings2 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
 /**
@@ -177,6 +177,45 @@ export const InfiniteGrid = () => {
   );
 };
 
-// Default export for compatibility
-export default InfiniteGrid;
+const App: React.FC = () => {
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    // Sync dark mode state with HTML class
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDark]);
+
+  return (
+    <div className="w-full relative min-h-screen">
+      {/* Sticky Theme Toggle */}
+      <button
+        onClick={() => setIsDark(!isDark)}
+        className="fixed top-4 right-4 z-50 p-3 rounded-full bg-background/50 backdrop-blur-sm border border-border shadow-lg hover:scale-110 active:scale-95 transition-all flex items-center justify-center group"
+        aria-label="Toggle Theme"
+      >
+        {isDark ? (
+          <Sun className="w-5 h-5 text-yellow-500 group-hover:rotate-45 transition-transform" />
+        ) : (
+          <Moon className="w-5 h-5 text-indigo-500 group-hover:-rotate-12 transition-transform" />
+        )}
+      </button>
+
+      {/* Main Content */}
+      <main>
+        <InfiniteGrid />
+      </main>
+
+      {/* Footer Branding */}
+      <footer className="fixed bottom-4 left-4 z-50 text-[10px] uppercase tracking-widest text-muted-foreground opacity-50 font-mono">
+        Shadcn Infinite Grid v1.1
+      </footer>
+    </div>
+  );
+};
+
+export default App;
 
