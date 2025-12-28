@@ -71,6 +71,9 @@ const FALLBACK_SPORTS: SportInfo[] = [
       { id: 'shooting_technique', name: 'Shooting Technique', description: 'Shooting the ball at goal' },
       { id: 'passing_technique', name: 'Passing Technique', description: 'Passing the ball to a teammate' },
       { id: 'crossing_technique', name: 'Crossing Technique', description: 'Crossing the ball from wide areas' },
+      { id: 'dribbling', name: 'Dribbling', description: 'Controlling and moving the ball while running' },
+      { id: 'receiving', name: 'Receiving', description: 'Controlling the ball when receiving a pass' },
+      { id: 'standing_tackle', name: 'Standing Tackle', description: 'Defensive tackle while maintaining balance' },
     ],
   },
   {
