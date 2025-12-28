@@ -13,12 +13,12 @@ export function LetsWorkTogether() {
   const [showSuccess, setShowSuccess] = useState(false)
   const [isButtonHovered, setIsButtonHovered] = useState(false)
 
-  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault()
     setIsClicked(true)
 
     setTimeout(() => {
-      setShowSuccess(true)
+      router.push('/select-sport')
     }, 500)
   }
 
@@ -164,7 +164,7 @@ export function LetsWorkTogether() {
           className="group relative cursor-pointer"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
-          onClick={(e) => handleClick(e as unknown as React.MouseEvent<HTMLAnchorElement>)}
+          onClick={handleClick}
           style={{
             pointerEvents: isClicked ? "none" : "auto",
           }}

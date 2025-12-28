@@ -15,7 +15,7 @@ export const Navbar: React.FC = () => {
               height={56} 
               className="h-12 w-auto md:h-14 md:w-auto"
             />
-            <span className="text-xl font-semibold text-white">FormLab</span>
+            <span className="text-xl font-semibold" style={{ color: '#FFFFFF' }}>FormLab</span>
           </Link>
           <div className="flex space-x-6">
             <Link
