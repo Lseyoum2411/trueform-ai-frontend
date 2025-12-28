@@ -111,10 +111,10 @@ export default function Upload() {
     <Layout>
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="space-y-2">
-          <h1 className="text-4xl font-bold text-white">
+          <h1 className="text-4xl font-bold text-foreground">
             Upload {getSportTitle(sportName, exerciseType)} Video
           </h1>
-          <p className="text-gray-400">
+          <p className="text-muted-foreground">
             Upload a video of your {sportName} performance for AI analysis
           </p>
         </div>

@@ -141,10 +141,10 @@ export default function Results() {
     return (
       <Layout>
         <div className="max-w-4xl mx-auto text-center py-12">
-          <p className="text-red-400 mb-4">No video ID provided</p>
+          <p className="text-destructive mb-4">No video ID provided</p>
           <button
             onClick={() => router.push('/')}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+            className="px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg"
           >
             Go Home
           </button>
@@ -161,18 +161,18 @@ export default function Results() {
           <div className="text-center space-y-4 py-12">
             <Loader />
             <div>
-              <h2 className="text-2xl font-bold text-white mb-2">
+              <h2 className="text-2xl font-bold text-foreground mb-2">
                 {status?.status === 'queued' ? 'Video Queued' : 'Processing Video'}
               </h2>
-              <p className="text-gray-400 mb-4">
+              <p className="text-muted-foreground mb-4">
                 {status?.status === 'queued'
                   ? 'Your video is in the queue. Analysis will start shortly...'
                   : `Analyzing your form... ${status?.progress ? Math.round(status.progress) : 0}%`}
               </p>
               {status?.progress && (
-                <div className="w-full max-w-md mx-auto bg-gray-700 rounded-full h-2">
+                <div className="w-full max-w-md mx-auto bg-muted rounded-full h-2">
                   <div
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                    className="bg-primary h-2 rounded-full transition-all duration-300"
                     style={{ width: `${status.progress}%` }}
                   />
                 </div>
@@ -192,18 +192,18 @@ export default function Results() {
         <div className="max-w-4xl mx-auto space-y-8">
           <div className="text-center space-y-4 py-12">
             <div className="text-5xl mb-4">⚠️</div>
-            <h2 className="text-2xl font-bold text-red-400 mb-2">Analysis Failed</h2>
-            <p className="text-gray-400 mb-6">{errorMessage}</p>
+            <h2 className="text-2xl font-bold text-destructive mb-2">Analysis Failed</h2>
+            <p className="text-muted-foreground mb-6">{errorMessage}</p>
             <div className="flex gap-4 justify-center">
               <button
                 onClick={() => router.push('/upload')}
-                className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+                className="px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg"
               >
                 Try Again
               </button>
               <button
                 onClick={() => router.push('/')}
-                className="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg"
+                className="px-6 py-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-lg"
               >
                 Go Home
               </button>
@@ -220,7 +220,7 @@ export default function Results() {
       <Layout>
         <div className="max-w-4xl mx-auto text-center py-12">
           <Loader />
-          <p className="text-gray-400 mt-4">Loading results...</p>
+          <p className="text-muted-foreground mt-4">Loading results...</p>
         </div>
       </Layout>
     );
@@ -241,26 +241,26 @@ export default function Results() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-bold text-white mb-2">Analysis Results</h1>
-            <p className="text-gray-400">
+            <h1 className="text-4xl font-bold text-foreground mb-2">Analysis Results</h1>
+            <p className="text-muted-foreground">
               {analysisResult.sport} • {analysisResult.exercise_type || 'N/A'}
             </p>
           </div>
           <button
             onClick={() => router.push('/select-sport')}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+            className="px-6 py-2 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg"
           >
             Upload Another Video
           </button>
         </div>
 
         {/* Overall Score */}
-        <div className="bg-dark-surface border border-dark-border rounded-lg p-8 text-center">
-          <p className="text-gray-400 mb-2">Overall Form Score</p>
+        <div className="bg-card border border-border rounded-lg p-8 text-center">
+          <p className="text-muted-foreground mb-2">Overall Form Score</p>
           <div className={`text-6xl font-bold ${scoreColor} mb-4`}>
             {Math.round(analysisResult.overall_score)}
           </div>
-          <div className="w-full max-w-md mx-auto bg-gray-700 rounded-full h-3">
+          <div className="w-full max-w-md mx-auto bg-muted rounded-full h-3">
             <div
               className={`h-3 rounded-full transition-all ${
                 analysisResult.overall_score >= 80
@@ -275,8 +275,8 @@ export default function Results() {
         </div>
 
         {/* Video Player with Pose Overlay */}
-        <div className="bg-dark-surface border border-dark-border rounded-lg overflow-hidden">
-          <div className="relative aspect-video bg-gray-900">
+        <div className="bg-card border border-border rounded-lg overflow-hidden">
+          <div className="relative aspect-video bg-background">
             {videoUrl ? (
               <>
                 <video
@@ -313,7 +313,7 @@ export default function Results() {
                       className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
                         showPoseOverlay
                           ? 'bg-green-600 hover:bg-green-700 text-white'
-                          : 'bg-gray-600 hover:bg-gray-700 text-white'
+                          : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
                       }`}
                     >
                       {showPoseOverlay ? 'Hide Pose' : 'Show Pose'}
@@ -325,8 +325,8 @@ export default function Results() {
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center space-y-4">
                   <div className="text-6xl">🎥</div>
-                  <p className="text-gray-400">Video playback will be available here</p>
-                  <p className="text-sm text-gray-500">Video ID: {videoId}</p>
+                  <p className="text-muted-foreground">Video playback will be available here</p>
+                  <p className="text-sm text-muted-foreground/60">Video ID: {videoId}</p>
                 </div>
               </div>
             )}
@@ -335,13 +335,13 @@ export default function Results() {
 
         {/* Feedback & Recommendations */}
         <div className="space-y-8">
-          <h2 className="text-2xl font-bold text-white">Feedback & Recommendations</h2>
+          <h2 className="text-2xl font-bold text-foreground">Feedback & Recommendations</h2>
 
           {/* Basketball Jumpshot Disclaimer */}
           {analysisResult.sport === 'basketball' && analysisResult.exercise_type === 'jumpshot' && (
-            <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-white mb-3">Before You Make Changes</h3>
-              <p className="text-gray-300 leading-relaxed">
+            <div className="bg-card/50 border border-border rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-foreground mb-3">Before You Make Changes</h3>
+              <p className="text-muted-foreground leading-relaxed">
                 If you are already shooting at a high percentage in games, there may be no need to change your jumpshot. Many effective shooters succeed with mechanics that are unique to them.
               </p>
             </div>
@@ -360,10 +360,10 @@ export default function Results() {
                     className="bg-green-900/20 border border-green-600/50 rounded-lg p-6"
                   >
                     <div className="flex items-start justify-between mb-3">
-                      <h4 className="font-semibold text-white text-lg">{feedback.title}</h4>
+                      <h4 className="font-semibold text-foreground text-lg">{feedback.title}</h4>
                       <span className="text-green-400 text-sm font-medium">✓ Positive</span>
                     </div>
-                    <p className="text-gray-200 leading-relaxed">{feedback.description}</p>
+                    <p className="text-foreground/80 leading-relaxed">{feedback.description}</p>
                   </div>
                 ))}
               </div>
@@ -381,12 +381,12 @@ export default function Results() {
                   const priorityColors = {
                     high: 'border-red-600/50 bg-red-900/20',
                     medium: 'border-amber-600/50 bg-amber-900/20',
-                    low: 'border-gray-600/50 bg-gray-900/20',
+                    low: 'border-border bg-card/50',
                   };
                   const priorityTextColors = {
                     high: 'text-red-400',
                     medium: 'text-amber-400',
-                    low: 'text-gray-400',
+                    low: 'text-muted-foreground',
                   };
                   const priorityLabels = {
                     high: 'High Priority',
@@ -400,7 +400,7 @@ export default function Results() {
                       className={`border rounded-lg p-6 ${priorityColors[feedback.priority]}`}
                     >
                       <div className="flex items-start justify-between mb-3">
-                        <h4 className="font-semibold text-white text-lg">{feedback.title}</h4>
+                        <h4 className="font-semibold text-foreground text-lg">{feedback.title}</h4>
                         <span className={`text-sm font-medium ${priorityTextColors[feedback.priority]}`}>
                           {priorityLabels[feedback.priority]}
                         </span>
@@ -414,32 +414,32 @@ export default function Results() {
                           {/* Observation */}
                           {feedback.observation && (
                             <div>
-                              <p className="text-sm text-gray-400 font-medium mb-1">Observation</p>
-                              <p className="text-gray-200 leading-relaxed">{feedback.observation}</p>
+                              <p className="text-sm text-muted-foreground font-medium mb-1">Observation</p>
+                              <p className="text-foreground/80 leading-relaxed">{feedback.observation}</p>
                             </div>
                           )}
                           
                           {/* Impact / Why It Matters */}
                           {feedback.impact && (
                             <div>
-                              <p className="text-sm text-gray-400 font-medium mb-1">Why It Matters</p>
-                              <p className="text-gray-200 leading-relaxed">{feedback.impact}</p>
+                              <p className="text-sm text-muted-foreground font-medium mb-1">Why It Matters</p>
+                              <p className="text-foreground/80 leading-relaxed">{feedback.impact}</p>
                             </div>
                           )}
                           
                           {/* Weightlifting: What We Saw */}
                           {feedback.what_we_saw && (
                             <div>
-                              <p className="text-sm text-blue-300 font-medium mb-1">What We Saw</p>
-                              <p className="text-gray-200 leading-relaxed">{feedback.what_we_saw}</p>
+                              <p className="text-sm text-primary font-medium mb-1">What We Saw</p>
+                              <p className="text-foreground/80 leading-relaxed">{feedback.what_we_saw}</p>
                             </div>
                           )}
                           
                           {/* How to Fix / How To Fix It */}
                           {feedback.how_to_fix && feedback.how_to_fix.length > 0 && (
                             <div>
-                              <p className="text-sm text-blue-300 font-medium mb-2">{feedback.observation ? 'What To Do' : 'How To Fix It'}</p>
-                              <ul className="list-disc list-inside space-y-1 text-gray-200">
+                              <p className="text-sm text-primary font-medium mb-2">{feedback.observation ? 'What To Do' : 'How To Fix It'}</p>
+                              <ul className="list-disc list-inside space-y-1 text-foreground/80">
                                 {feedback.how_to_fix.map((fix, fixIndex) => (
                                   <li key={fixIndex} className="leading-relaxed">{fix}</li>
                                 ))}
@@ -450,51 +450,51 @@ export default function Results() {
                           {/* Weightlifting: What It Should Feel Like */}
                           {feedback.what_it_should_feel_like && (
                             <div>
-                              <p className="text-sm text-blue-300 font-medium mb-1">What It Should Feel Like</p>
-                              <p className="text-gray-200 leading-relaxed">{feedback.what_it_should_feel_like}</p>
+                              <p className="text-sm text-primary font-medium mb-1">What It Should Feel Like</p>
+                              <p className="text-foreground/80 leading-relaxed">{feedback.what_it_should_feel_like}</p>
                             </div>
                           )}
                           
                           {/* Weightlifting: Common Mistake To Avoid */}
                           {feedback.common_mistake && (
                             <div>
-                              <p className="text-sm text-blue-300 font-medium mb-1">Common Mistake To Avoid</p>
-                              <p className="text-gray-200 leading-relaxed">{feedback.common_mistake}</p>
+                              <p className="text-sm text-primary font-medium mb-1">Common Mistake To Avoid</p>
+                              <p className="text-foreground/80 leading-relaxed">{feedback.common_mistake}</p>
                             </div>
                           )}
                           
                           {/* Drill */}
                           {feedback.drill && (
-                            <div className="pt-2 border-t border-gray-700/50">
-                              <p className="text-sm text-blue-300 font-medium mb-1">💡 Drill</p>
-                              <p className="text-gray-200 leading-relaxed">{feedback.drill}</p>
+                            <div className="pt-2 border-t border-border/50">
+                              <p className="text-sm text-primary font-medium mb-1">💡 Drill</p>
+                              <p className="text-foreground/80 leading-relaxed">{feedback.drill}</p>
                             </div>
                           )}
                           
                           {/* Coaching Cue */}
                           {feedback.coaching_cue && (
-                            <div className="pt-2 border-t border-gray-700/50">
-                              <p className="text-sm text-amber-300 font-medium mb-1">🎯 Coaching Cue</p>
-                              <p className="text-gray-200 leading-relaxed font-semibold italic">{feedback.coaching_cue}</p>
+                            <div className="pt-2 border-t border-border/50">
+                              <p className="text-sm text-amber-400 font-medium mb-1">🎯 Coaching Cue</p>
+                              <p className="text-foreground/80 leading-relaxed font-semibold italic">{feedback.coaching_cue}</p>
                             </div>
                           )}
                           
                           {/* Weightlifting: Quick Self-Check */}
                           {feedback.self_check && (
-                            <div className="pt-2 border-t border-gray-700/50">
-                              <p className="text-sm text-blue-300 font-medium mb-1">Quick Self-Check</p>
-                              <p className="text-gray-200 leading-relaxed">{feedback.self_check}</p>
+                            <div className="pt-2 border-t border-border/50">
+                              <p className="text-sm text-primary font-medium mb-1">Quick Self-Check</p>
+                              <p className="text-foreground/80 leading-relaxed">{feedback.self_check}</p>
                             </div>
                           )}
                         </div>
                       ) : (
                         // Legacy/non-structured feedback display
                         <>
-                          <p className="text-gray-200 leading-relaxed mb-3">{feedback.description}</p>
+                          <p className="text-foreground/80 leading-relaxed mb-3">{feedback.description}</p>
                           {feedback.recommendation && (
-                            <div className="mt-3 pt-3 border-t border-gray-700/50">
-                              <p className="text-sm text-blue-300 font-medium">💡 Recommendation</p>
-                              <p className="text-gray-300 mt-1">{feedback.recommendation}</p>
+                            <div className="mt-3 pt-3 border-t border-border/50">
+                              <p className="text-sm text-primary font-medium">💡 Recommendation</p>
+                              <p className="text-foreground/70 mt-1">{feedback.recommendation}</p>
                             </div>
                           )}
                         </>
@@ -508,8 +508,8 @@ export default function Results() {
 
           {/* Empty State */}
           {strengths.length === 0 && improvements.length === 0 && (
-            <div className="bg-dark-surface border border-dark-border rounded-lg p-8 text-center">
-              <p className="text-gray-400">No feedback available yet.</p>
+            <div className="bg-card border border-border rounded-lg p-8 text-center">
+              <p className="text-muted-foreground">No feedback available yet.</p>
             </div>
           )}
         </div>
@@ -518,13 +518,13 @@ export default function Results() {
         <div className="flex gap-4 justify-center pt-4">
           <button
             onClick={() => router.push('/select-sport')}
-            className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
+            className="px-8 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold rounded-lg transition-colors"
           >
             Analyze Another Video
           </button>
           <button
             onClick={() => router.push('/')}
-            className="px-8 py-3 bg-gray-600 hover:bg-gray-700 text-white font-semibold rounded-lg transition-colors"
+            className="px-8 py-3 bg-secondary hover:bg-secondary/80 text-secondary-foreground font-semibold rounded-lg transition-colors"
           >
             Back to Home
           </button>
@@ -533,4 +533,3 @@ export default function Results() {
     </Layout>
   );
 }
-

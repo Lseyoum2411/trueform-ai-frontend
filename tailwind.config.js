@@ -6,11 +6,6 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        dark: {
-          bg: '#0a0a0a',
-          surface: '#1a1a1a',
-          border: '#2a2a2a',
-        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -35,6 +30,14 @@ module.exports = {
         accent: {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
         },
       },
       fontFamily: {
