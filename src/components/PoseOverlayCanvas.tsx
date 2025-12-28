@@ -63,15 +63,40 @@ export const PoseOverlayCanvas: React.FC<PoseOverlayCanvasProps> = ({
     const updateCanvas = () => {
       if (!video || !canvas || !ctx) return;
 
-      // Match canvas size to video display size
-      const rect = video.getBoundingClientRect();
-      canvas.width = rect.width;
-      canvas.height = rect.height;
+      // Get video's natural dimensions and display dimensions
+      const videoWidth = video.videoWidth || video.clientWidth;
+      const videoHeight = video.videoHeight || video.clientHeight;
+      const displayRect = video.getBoundingClientRect();
+      const displayWidth = displayRect.width;
+      const displayHeight = displayRect.height;
+
+      // Calculate actual video display area (accounting for object-contain letterboxing/pillarboxing)
+      const videoAspect = videoWidth / videoHeight;
+      const displayAspect = displayWidth / displayHeight;
+      
+      let videoDisplayWidth = displayWidth;
+      let videoDisplayHeight = displayHeight;
+      let offsetX = 0;
+      let offsetY = 0;
+
+      if (videoAspect > displayAspect) {
+        // Video is wider - letterboxing (black bars top/bottom)
+        videoDisplayHeight = displayWidth / videoAspect;
+        offsetY = (displayHeight - videoDisplayHeight) / 2;
+      } else {
+        // Video is taller - pillarboxing (black bars left/right)
+        videoDisplayWidth = displayHeight * videoAspect;
+        offsetX = (displayWidth - videoDisplayWidth) / 2;
+      }
+
+      // Set canvas size to match display container
+      canvas.width = displayWidth;
+      canvas.height = displayHeight;
 
       // Clear canvas
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      if (!showOverlay || !poseData.length) {
+      if (!showOverlay || !poseData.length || videoWidth === 0 || videoHeight === 0) {
         return;
       }
 
@@ -98,7 +123,6 @@ export const PoseOverlayCanvas: React.FC<PoseOverlayCanvasProps> = ({
       ctx.lineWidth = 2;
 
       // Helper function to safely get coordinate value
-      // Uses explicit type checking - NO nullish coalescing or logical OR operators
       const getCoord = (p: any, key: 'x' | 'y'): number => {
         if (p && typeof p[key] === 'number') {
           return p[key];
@@ -112,11 +136,12 @@ export const PoseOverlayCanvas: React.FC<PoseOverlayCanvasProps> = ({
         const point2 = frameData.landmarks[point2Name];
 
         if (point1 && point2) {
-          // Convert normalized coordinates to canvas coordinates
-          const x1 = getCoord(point1, 'x') * canvas.width;
-          const y1 = getCoord(point1, 'y') * canvas.height;
-          const x2 = getCoord(point2, 'x') * canvas.width;
-          const y2 = getCoord(point2, 'y') * canvas.height;
+          // Convert normalized coordinates (0-1, top-left origin) to canvas coordinates
+          // Account for the actual video display area within the container
+          const x1 = offsetX + getCoord(point1, 'x') * videoDisplayWidth;
+          const y1 = offsetY + getCoord(point1, 'y') * videoDisplayHeight;
+          const x2 = offsetX + getCoord(point2, 'x') * videoDisplayWidth;
+          const y2 = offsetY + getCoord(point2, 'y') * videoDisplayHeight;
 
           ctx.beginPath();
           ctx.moveTo(x1, y1);
@@ -129,8 +154,8 @@ export const PoseOverlayCanvas: React.FC<PoseOverlayCanvasProps> = ({
       Object.entries(frameData.landmarks).forEach(([name, point]) => {
         if (!point) return;
 
-        const x = getCoord(point, 'x') * canvas.width;
-        const y = getCoord(point, 'y') * canvas.height;
+        const x = offsetX + getCoord(point, 'x') * videoDisplayWidth;
+        const y = offsetY + getCoord(point, 'y') * videoDisplayHeight;
 
         ctx.beginPath();
         ctx.arc(x, y, 4, 0, 2 * Math.PI);

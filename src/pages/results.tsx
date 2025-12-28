@@ -235,6 +235,20 @@ export default function Results() {
       ? 'text-yellow-400'
       : 'text-red-400';
 
+  // Format sport name for display
+  const getSportDisplayName = (sportId: string): string => {
+    const sportNames: Record<string, string> = {
+      basketball: 'Basketball',
+      golf: 'Golf',
+      weightlifting: 'Weightlifting',
+      baseball: 'Baseball',
+      soccer: 'Soccer',
+      track_field: 'Track and Field',
+      volleyball: 'Volleyball',
+    };
+    return sportNames[sportId] || sportId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
+
   return (
     <Layout>
       <div className="max-w-6xl mx-auto space-y-8">
@@ -243,7 +257,7 @@ export default function Results() {
           <div>
             <h1 className="text-4xl font-bold text-foreground mb-2">Analysis Results</h1>
             <p className="text-muted-foreground">
-              {analysisResult.sport} • {analysisResult.exercise_type || 'N/A'}
+              {getSportDisplayName(analysisResult.sport)} • {analysisResult.exercise_type || 'N/A'}
             </p>
           </div>
           <button
