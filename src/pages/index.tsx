@@ -13,9 +13,7 @@ export default function Home() {
   return (
     <Layout>
       <Hero7
-        heading="AI-Powered Movement Analysis for Every Athlete"
         description="Upload your shot, swing, or lift — get instant AI form feedback. Get personalized coaching to improve your form across all your favorite sports."
-        key="hero-updated"
         button={{
           text: "Get Started",
           onClick: handleGetStarted,

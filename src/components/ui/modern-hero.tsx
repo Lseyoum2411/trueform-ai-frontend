@@ -5,7 +5,6 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 
 interface Hero7Props {
-  heading?: string;
   description?: string;
   button?: {
     text: string;
@@ -22,7 +21,6 @@ interface Hero7Props {
 }
 
 const Hero7 = ({
-  heading,
   description = "Upload your shot, swing, or lift — get instant AI form feedback. Get personalized coaching to improve your form across all your favorite sports.",
   button = {
     text: "Get Started",
