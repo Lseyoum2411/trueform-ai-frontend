@@ -72,6 +72,8 @@ export default function Upload() {
         shooting_technique: 'Shooting Technique',
         passing_technique: 'Passing Technique',
         crossing_technique: 'Crossing Technique',
+        dribbling: 'Dribbling',
+        receiving: 'Receiving',
         // Track & Field
         sprint_start: 'Sprint Start',
         acceleration_phase: 'Acceleration Phase',
