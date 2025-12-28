@@ -1,8 +1,12 @@
 import React from 'react';
-import InfiniteGridApp from '@/components/ui/infinite-grid-integration';
+import { LetsWorkTogether } from '@/components/ui/lets-work-section';
 
 export default function Home() {
-  return <InfiniteGridApp />;
+  return (
+    <main className="w-full">
+      <LetsWorkTogether />
+    </main>
+  );
 }
 
 
