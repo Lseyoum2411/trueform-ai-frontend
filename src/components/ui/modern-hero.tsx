@@ -65,9 +65,6 @@ const Hero7 = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <div className="mx-auto flex max-w-screen-lg flex-col gap-6">
           <h1 className="text-3xl font-extrabold text-white lg:text-6xl">AI-Powered Movement Analysis for Every Athlete</h1>
-          <p className="text-balance text-gray-300 lg:text-lg">
-            {description}
-          </p>
         </div>
         <Button 
           size="lg" 
