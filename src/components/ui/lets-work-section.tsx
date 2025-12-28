@@ -3,9 +3,11 @@
 import type React from "react"
 
 import { useState } from "react"
-import { ArrowUpRight, Calendar } from "lucide-react"
+import { useRouter } from "next/router"
+import { ArrowUpRight, Upload } from "lucide-react"
 
 export function LetsWorkTogether() {
+  const router = useRouter()
   const [isHovered, setIsHovered] = useState(false)
   const [isClicked, setIsClicked] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
@@ -20,9 +22,8 @@ export function LetsWorkTogether() {
     }, 500)
   }
 
-  const handleBookCall = () => {
-    // Update with FormLab's actual booking link or remove if not applicable
-    window.open("https://cal.com", "_blank")
+  const handleGetStarted = () => {
+    router.push('/select-sport')
   }
 
   return (
@@ -46,7 +47,7 @@ export function LetsWorkTogether() {
                 transitionDelay: "100ms",
               }}
             >
-              Perfect
+              Ready
             </span>
             <h3
               className="text-3xl font-light tracking-tight text-foreground transition-all duration-500 sm:text-4xl"
@@ -56,13 +57,13 @@ export function LetsWorkTogether() {
                 transitionDelay: "200ms",
               }}
             >
-              Let's talk
+              Get Started
             </h3>
           </div>
 
-          {/* Book a call button */}
+          {/* Get Started button */}
           <button
-            onClick={handleBookCall}
+            onClick={handleGetStarted}
             onMouseEnter={() => setIsButtonHovered(true)}
             onMouseLeave={() => setIsButtonHovered(false)}
             className="group relative flex items-center gap-4 transition-all duration-500 cursor-pointer"
@@ -94,7 +95,7 @@ export function LetsWorkTogether() {
                 boxShadow: isButtonHovered ? "0 0 30px rgba(0,0,0,0.1), 0 10px 40px rgba(0,0,0,0.08)" : "none",
               }}
             >
-              <Calendar
+              <Upload
                 className="size-4 transition-all duration-500 sm:size-5"
                 strokeWidth={1.5}
                 style={{
@@ -107,7 +108,7 @@ export function LetsWorkTogether() {
                   color: isButtonHovered ? "var(--background)" : "var(--foreground)",
                 }}
               >
-                Book a call
+                Upload Video
               </span>
               <ArrowUpRight
                 className="size-4 transition-all duration-500 sm:size-5"
@@ -138,7 +139,7 @@ export function LetsWorkTogether() {
               transitionDelay: "450ms",
             }}
           >
-            15 min intro call
+            Instant AI Analysis
           </span>
         </div>
 
@@ -155,7 +156,7 @@ export function LetsWorkTogether() {
             <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
           </span>
           <span className="text-sm font-medium tracking-widest uppercase text-muted-foreground">
-            Available for projects
+            Ready to analyze
           </span>
         </div>
 
@@ -183,7 +184,7 @@ export function LetsWorkTogether() {
                     transform: isHovered && !isClicked ? "translateY(-8%)" : "translateY(0)",
                   }}
                 >
-                  Let's work
+                  Improve your
                 </span>
               </span>
               <span className="block overflow-hidden">
@@ -193,7 +194,7 @@ export function LetsWorkTogether() {
                     transform: isHovered && !isClicked ? "translateY(-8%)" : "translateY(0)",
                   }}
                 >
-                  <span className="text-muted-foreground/60">together</span>
+                  <span className="text-muted-foreground/60">form</span>
                 </span>
               </span>
             </h2>
