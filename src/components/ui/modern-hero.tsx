@@ -22,7 +22,7 @@ interface Hero7Props {
 }
 
 const Hero7 = ({
-  heading = "AI-Powered Movement Analysis for Every Athlete",
+  heading,
   description = "Upload your shot, swing, or lift — get instant AI form feedback. Get personalized coaching to improve your form across all your favorite sports.",
   button = {
     text: "Get Started",
@@ -66,7 +66,7 @@ const Hero7 = ({
     <section className="py-32">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <div className="mx-auto flex max-w-screen-lg flex-col gap-6">
-          <h1 className="text-3xl font-extrabold text-white lg:text-6xl">{heading}</h1>
+          <h1 className="text-3xl font-extrabold text-white lg:text-6xl">AI-Powered Movement Analysis for Every Athlete</h1>
           <p className="text-balance text-gray-300 lg:text-lg">
             {description}
           </p>
