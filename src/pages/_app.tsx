@@ -3,9 +3,9 @@ import { useEffect } from 'react';
 import '@/styles/globals.css';
 
 export default function App({ Component, pageProps }: AppProps) {
-  // Ensure dark mode is enabled by adding dark class to html element
+  // Ensure light mode by removing dark class from html element
   useEffect(() => {
-    document.documentElement.classList.add('dark');
+    document.documentElement.classList.remove('dark');
   }, []);
 
   return <Component {...pageProps} />;
