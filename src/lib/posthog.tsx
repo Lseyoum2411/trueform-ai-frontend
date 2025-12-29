@@ -31,11 +31,21 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
           // Only initialize once
           if (posthog && !posthog.__loaded) {
             initialized = true
+            
+            // Extract ui_host from api_host (us.i.posthog.com -> us.posthog.com)
+            const uiHost = posthogHost?.replace('i.posthog.com', 'posthog.com') || 'https://us.posthog.com'
+            
             posthog.init(posthogKey, {
               api_host: posthogHost,
+              ui_host: uiHost,
               // Enable autocapture of events
               autocapture: true,
-              // Capture pageviews automatically
+              // Person profiles
+              person_profiles: 'identified_only',
+              // Capture pageviews manually
+              capture_pageview: false,
+              capture_pageleave: true,
+              // Better for Next.js
               loaded: (posthog: any) => {
                 if (process.env.NODE_ENV === 'development') {
                   posthog.debug() // Enable debug mode in development
