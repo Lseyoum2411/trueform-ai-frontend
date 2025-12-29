@@ -13,16 +13,15 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
       const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY
       const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST
 
-      // Debug logging to verify env vars are loaded
-      if (process.env.NODE_ENV === 'development') {
-        console.log('PostHog Config Check:', {
-          hasKey: !!posthogKey,
-          keyLength: posthogKey?.length || 0,
-          keyPrefix: posthogKey?.substring(0, 10) || 'none',
-          hasHost: !!posthogHost,
-          host: posthogHost || 'none'
-        })
-      }
+      // Debug logging to verify env vars are loaded (always show for debugging)
+      console.log('[PostHog] Config Check:', {
+        hasKey: !!posthogKey,
+        keyLength: posthogKey?.length || 0,
+        keyPrefix: posthogKey?.substring(0, 15) || 'none',
+        keyEnding: posthogKey ? '...' + posthogKey.substring(posthogKey.length - 10) : 'none',
+        hasHost: !!posthogHost,
+        host: posthogHost || 'none'
+      })
 
       if (posthogKey && posthogHost) {
         // Dynamic import to avoid SSR issues
