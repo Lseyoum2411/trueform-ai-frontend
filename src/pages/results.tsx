@@ -292,6 +292,11 @@ export default function Results() {
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
+        // Wait for video metadata to be loaded
+        if (!video.videoWidth || !video.videoHeight) {
+          return;
+        }
+
         const currentTime = video.currentTime;
         const frame =
           poseData.find(f => Math.abs(f.timestamp - currentTime) < 0.1) ||
@@ -300,29 +305,48 @@ export default function Results() {
         if (!frame?.landmarks) return;
 
         const containerRect = containerRef.current.getBoundingClientRect();
+        
+        // Get video's natural dimensions
+        const videoNaturalWidth = video.videoWidth;
+        const videoNaturalHeight = video.videoHeight;
+        const videoAspect = videoNaturalWidth / videoNaturalHeight;
+        
+        // Get container dimensions
+        const containerWidth = containerRect.width;
+        const containerHeight = containerRect.height;
+        const containerAspect = containerWidth / containerHeight;
 
-        const videoAspect = video.videoWidth / video.videoHeight;
-        const containerAspect = containerRect.width / containerRect.height;
-
-        let displayWidth = containerRect.width;
-        let displayHeight = containerRect.height;
-        let offsetX = 0;
-        let offsetY = 0;
+        // Calculate actual video display dimensions (object-fit: contain behavior)
+        let displayWidth: number;
+        let displayHeight: number;
+        let offsetX: number;
+        let offsetY: number;
 
         if (videoAspect > containerAspect) {
-          displayHeight = containerRect.width / videoAspect;
-          offsetY = (containerRect.height - displayHeight) / 2;
+          // Video is wider than container - letterboxing (black bars top/bottom)
+          displayWidth = containerWidth;
+          displayHeight = containerWidth / videoAspect;
+          offsetX = 0;
+          offsetY = (containerHeight - displayHeight) / 2;
         } else {
-          displayWidth = containerRect.height * videoAspect;
-          offsetX = (containerRect.width - displayWidth) / 2;
+          // Video is taller than container - pillarboxing (black bars left/right)
+          displayWidth = containerHeight * videoAspect;
+          displayHeight = containerHeight;
+          offsetX = (containerWidth - displayWidth) / 2;
+          offsetY = 0;
         }
 
+        // Set canvas size to match the actual video display area
         canvas.width = displayWidth;
         canvas.height = displayHeight;
+        
+        // Position canvas to exactly match video display area
+        canvas.style.position = 'absolute';
         canvas.style.width = `${displayWidth}px`;
         canvas.style.height = `${displayHeight}px`;
         canvas.style.left = `${offsetX}px`;
         canvas.style.top = `${offsetY}px`;
+        canvas.style.pointerEvents = 'none';
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.strokeStyle = '#00ff00';
