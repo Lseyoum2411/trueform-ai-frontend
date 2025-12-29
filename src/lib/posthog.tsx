@@ -15,12 +15,9 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
 
       // Debug logging to verify env vars are loaded (always show for debugging)
       console.log('[PostHog] Config Check:', {
-        hasKey: !!posthogKey,
-        keyLength: posthogKey?.length || 0,
-        keyPrefix: posthogKey?.substring(0, 15) || 'none',
-        keyEnding: posthogKey ? '...' + posthogKey.substring(posthogKey.length - 10) : 'none',
-        hasHost: !!posthogHost,
-        host: posthogHost || 'none'
+        envKey: posthogKey ? `Present (${posthogKey.length} chars)` : 'Missing',
+        envHost: posthogHost || 'Missing',
+        usingHardcoded: 'Testing with hardcoded values'
       })
 
       if (posthogKey && posthogHost) {
