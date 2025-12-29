@@ -13,6 +13,17 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
       const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY
       const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST
 
+      // Debug logging to verify env vars are loaded
+      if (process.env.NODE_ENV === 'development') {
+        console.log('PostHog Config Check:', {
+          hasKey: !!posthogKey,
+          keyLength: posthogKey?.length || 0,
+          keyPrefix: posthogKey?.substring(0, 10) || 'none',
+          hasHost: !!posthogHost,
+          host: posthogHost || 'none'
+        })
+      }
+
       if (posthogKey && posthogHost) {
         // Dynamic import to avoid SSR issues
         import('posthog-js').then((posthogModule) => {
@@ -35,12 +46,13 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
               },
             })
           }
+        }).catch((error) => {
+          console.error('PostHog initialization error:', error)
         })
       } else {
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('PostHog key or host not found. Analytics will not be initialized.')
-          console.warn('Please set NEXT_PUBLIC_POSTHOG_KEY and NEXT_PUBLIC_POSTHOG_HOST environment variables.')
-        }
+        console.warn('PostHog key or host not found. Analytics will not be initialized.')
+        console.warn('POSTHOG_KEY:', posthogKey ? 'Present' : 'Missing')
+        console.warn('POSTHOG_HOST:', posthogHost || 'Missing')
       }
     }
   }, [])
