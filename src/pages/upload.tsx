@@ -17,7 +17,7 @@ export default function Upload() {
   const exerciseType = exercise_type as string;
 
   useEffect(() => {
-    if (!sport || !['basketball', 'golf', 'weightlifting', 'baseball', 'soccer', 'track_field', 'volleyball'].includes(sport as string)) {
+    if (!sport || !['basketball', 'golf', 'weightlifting', 'baseball', 'soccer', 'track_field', 'volleyball', 'lacrosse'].includes(sport as string)) {
       router.push('/select-sport');
     }
   }, [sport, router]);
@@ -31,6 +31,7 @@ export default function Upload() {
       soccer: 'Soccer',
       track_field: 'Track & Field',
       volleyball: 'Volleyball',
+      lacrosse: 'Lacrosse',
     };
     
     const baseTitle = titles[sport] || 'Upload Video';
@@ -78,10 +79,16 @@ export default function Upload() {
         sprint_start: 'Sprint Start',
         acceleration_phase: 'Acceleration Phase',
         max_velocity_sprint: 'Max Velocity Sprint',
+        shot_put: 'Shot Put',
+        discus_throw: 'Discus Throw',
+        javelin_throw: 'Javelin Throw',
+        hurdle_technique: 'Hurdle Technique',
         // Volleyball
         spike_approach: 'Spike Approach',
         jump_serve: 'Jump Serve',
         blocking_jump: 'Blocking Jump',
+        // Lacrosse
+        shooting: 'Shooting',
       };
       const exerciseName = exerciseNames[exerciseType] || exerciseType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
       return `${baseTitle} - ${exerciseName}`;

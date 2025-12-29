@@ -16,6 +16,7 @@ const sportIcons: Record<string, string> = {
   soccer: '⚽',
   track_field: '🏃',
   volleyball: '🏐',
+  lacrosse: '🥍',
 };
 
 export const SportCard: React.FC<SportCardProps> = ({

@@ -1,4 +1,4 @@
-export type Sport = 'basketball' | 'golf' | 'weightlifting' | 'baseball' | 'soccer' | 'track_field' | 'volleyball';
+export type Sport = 'basketball' | 'golf' | 'weightlifting' | 'baseball' | 'soccer' | 'track_field' | 'volleyball' | 'lacrosse';
 
 export interface ExerciseType {
   id: string;

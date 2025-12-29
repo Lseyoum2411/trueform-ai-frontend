@@ -245,6 +245,7 @@ export default function Results() {
       soccer: 'Soccer',
       track_field: 'Track and Field',
       volleyball: 'Volleyball',
+      lacrosse: 'Lacrosse',
     };
     return sportNames[sportId] || sportId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };

@@ -84,6 +84,10 @@ const FALLBACK_SPORTS: SportInfo[] = [
       { id: 'sprint_start', name: 'Sprint Start', description: 'Starting technique from blocks' },
       { id: 'acceleration_phase', name: 'Acceleration Phase', description: 'Accelerating from start to top speed' },
       { id: 'max_velocity_sprint', name: 'Max Velocity Sprint', description: 'Maintaining maximum sprint speed' },
+      { id: 'shot_put', name: 'Shot Put', description: 'Analyze lower-body drive, hip rotation, and release mechanics' },
+      { id: 'discus_throw', name: 'Discus Throw', description: 'Analyze rotational balance, sequencing, and release angle' },
+      { id: 'javelin_throw', name: 'Javelin Throw', description: 'Analyze approach mechanics, torso separation, and throwing motion' },
+      { id: 'hurdle_technique', name: 'Hurdle Technique', description: 'Analyze lead-leg mechanics, clearance efficiency, and rhythm' },
     ],
   },
   {
@@ -95,6 +99,15 @@ const FALLBACK_SPORTS: SportInfo[] = [
       { id: 'spike_approach', name: 'Spike Approach', description: 'Approach and jumping for a spike attack' },
       { id: 'jump_serve', name: 'Jump Serve', description: 'Serving with a jump and power' },
       { id: 'blocking_jump', name: 'Blocking Jump', description: 'Jumping to block opponent\'s attack' },
+    ],
+  },
+  {
+    id: 'lacrosse',
+    name: 'Lacrosse',
+    description: 'Analyze your lacrosse technique',
+    requires_exercise_type: true,
+    exercise_types: [
+      { id: 'shooting', name: 'Shooting', description: 'Analyze lacrosse shooting mechanics, body alignment, rotational sequencing, and release mechanics' },
     ],
   },
 ];
@@ -230,7 +243,8 @@ export default function SelectSport() {
                          sport.id === 'baseball' ? '⚾' :
                          sport.id === 'soccer' ? '⚽' :
                          sport.id === 'track_field' ? '🏃' :
-                         sport.id === 'volleyball' ? '🏐' : '🎯'}
+                         sport.id === 'volleyball' ? '🏐' :
+                         sport.id === 'lacrosse' ? '🥍' : '🎯'}
                       </div>
                       <div className="flex-1">
                         <h3 className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors">
