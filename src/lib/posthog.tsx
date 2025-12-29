@@ -13,53 +13,42 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
       const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY
       const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST
 
-      // Debug logging to verify env vars are loaded (always show for debugging)
-      console.log('[PostHog] Config Check:', {
-        envKey: posthogKey ? `Present (${posthogKey.length} chars)` : 'Missing',
-        envHost: posthogHost || 'Missing',
-        usingHardcoded: 'Testing with hardcoded values'
+      // TEMPORARY: Hardcode values to test - will switch back to env vars after confirming it works
+      const testKey = 'phc_AyARmLejdlYSvBP9nWR1SXHA02InDzQ4ez8yWyEAVDQ'
+      const testHost = 'https://us.i.posthog.com'
+      
+      console.log('[PostHog] Using hardcoded values for testing:', {
+        keyLength: testKey.length,
+        keyPrefix: testKey.substring(0, 15),
+        host: testHost
       })
 
-      if (posthogKey && posthogHost) {
-        // Dynamic import to avoid SSR issues
-        import('posthog-js').then((posthogModule) => {
-          posthog = posthogModule.default
+      // Dynamic import to avoid SSR issues
+      import('posthog-js').then((posthogModule) => {
+        posthog = posthogModule.default
+        
+        // Only initialize once
+        if (posthog && !posthog.__loaded) {
+          initialized = true
           
-          // Only initialize once
-          if (posthog && !posthog.__loaded) {
-            initialized = true
-            
-            // Extract ui_host from api_host (us.i.posthog.com -> us.posthog.com)
-            const uiHost = posthogHost?.replace('i.posthog.com', 'posthog.com') || 'https://us.posthog.com'
-            
-            posthog.init(posthogKey, {
-              api_host: posthogHost,
-              ui_host: uiHost,
-              // Enable autocapture of events
-              autocapture: true,
-              // Person profiles
-              person_profiles: 'identified_only',
-              // Capture pageviews manually
-              capture_pageview: false,
-              capture_pageleave: true,
-              // Better for Next.js
-              loaded: (posthog: any) => {
-                if (process.env.NODE_ENV === 'development') {
-                  posthog.debug() // Enable debug mode in development
-                }
-                // Track initial pageview after PostHog is loaded
-                posthog.capture('$pageview')
-              },
-            })
-          }
-        }).catch((error) => {
-          console.error('PostHog initialization error:', error)
-        })
-      } else {
-        console.warn('PostHog key or host not found. Analytics will not be initialized.')
-        console.warn('POSTHOG_KEY:', posthogKey ? 'Present' : 'Missing')
-        console.warn('POSTHOG_HOST:', posthogHost || 'Missing')
-      }
+          posthog.init(testKey, {
+            api_host: testHost,
+            // Enable autocapture of events
+            autocapture: true,
+            // Better for Next.js
+            loaded: (posthog: any) => {
+              console.log('[PostHog] Initialized successfully!')
+              if (process.env.NODE_ENV === 'development') {
+                posthog.debug() // Enable debug mode in development
+              }
+              // Track initial pageview after PostHog is loaded
+              posthog.capture('$pageview')
+            },
+          })
+        }
+      }).catch((error) => {
+        console.error('PostHog initialization error:', error)
+      })
     }
   }, [])
 
