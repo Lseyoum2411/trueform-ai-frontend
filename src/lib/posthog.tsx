@@ -13,14 +13,25 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
       const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY
       const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST
 
-      // TEMPORARY: Hardcode values to test - will switch back to env vars after confirming it works
-      const testKey = 'phc_AyARmLejdlYSvBP9nWR1SXHA02InDzQ4ez8yWyEAVDQ'
-      const testHost = 'https://us.i.posthog.com'
+      // Use environment variables, with fallback to hardcoded values if env vars are missing/truncated
+      const envKey = process.env.NEXT_PUBLIC_POSTHOG_KEY
+      const envHost = process.env.NEXT_PUBLIC_POSTHOG_HOST
       
-      console.log('[PostHog] Using hardcoded values for testing:', {
-        keyLength: testKey.length,
-        keyPrefix: testKey.substring(0, 15),
-        host: testHost
+      // Fallback values (same as your Vercel env vars)
+      const fallbackKey = 'phc_AyARmLejdlYSvBP9nWR1SXHA02InDzQ4ez8yWyEAVDQ'
+      const fallbackHost = 'https://us.i.posthog.com'
+      
+      // Use env vars if they're valid (key should be ~51 chars), otherwise use fallback
+      const posthogKey = (envKey && envKey.length > 40) ? envKey : fallbackKey
+      const posthogHost = envHost || fallbackHost
+      
+      const usingEnvVars = (envKey && envKey.length > 40) && envHost
+      
+      console.log('[PostHog] Config:', {
+        usingEnvVars,
+        keyLength: posthogKey.length,
+        keyPrefix: posthogKey.substring(0, 15),
+        host: posthogHost
       })
 
       // Dynamic import to avoid SSR issues
@@ -31,8 +42,8 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
         if (posthog && !posthog.__loaded) {
           initialized = true
           
-          posthog.init(testKey, {
-            api_host: testHost,
+          posthog.init(posthogKey, {
+            api_host: posthogHost,
             // Enable autocapture of events
             autocapture: true,
             // Better for Next.js
