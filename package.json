@@ -19,7 +19,8 @@
     "@radix-ui/react-avatar": "^1.0.4",
     "@radix-ui/react-slot": "^1.0.2",
     "class-variance-authority": "^0.7.0",
-    "framer-motion": "^10.16.16"
+    "framer-motion": "^10.16.16",
+    "posthog-js": "^1.134.3"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
