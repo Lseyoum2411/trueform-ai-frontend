@@ -3,9 +3,8 @@ import { useRouter } from 'next/router';
 import { Layout } from '@/components/Layout';
 import { usePollStatus } from '@/hooks/usePollStatus';
 import { getAnalysisResults, getVideoStatus } from '@/lib/api';
-import { AnalysisResult, UIFeedback, VideoStatus } from '@/types';
+import { AnalysisResult, UIFeedback, VideoStatus, PoseDataFrame } from '@/types';
 import { Loader } from '@/components/Loader';
-import { PoseOverlayCanvas } from '@/components/PoseOverlayCanvas';
 import { formatFeedbackItem, formatStrengthText, formatMetricLabel, FormattedFeedback } from '@/utils/feedbackFormatter';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -20,9 +19,6 @@ export default function Results() {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [loadingResults, setLoadingResults] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showPoseOverlay, setShowPoseOverlay] = useState(true);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Poll status until completed
   const {
@@ -250,6 +246,184 @@ export default function Results() {
     return sportNames[sportId] || sportId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
+  // Video + Pose Overlay Component
+  const VideoPoseDisplay: React.FC<{
+    videoUrl: string;
+    poseData: PoseDataFrame[];
+    onVideoError: () => void;
+  }> = ({ videoUrl, poseData, onVideoError }) => {
+    const [showPose, setShowPose] = useState(true);
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    // MediaPipe pose landmark connections (using named landmarks to match our data structure)
+    const POSE_CONNECTIONS = [
+      ['left_shoulder', 'right_shoulder'],
+      ['left_shoulder', 'left_elbow'],
+      ['right_shoulder', 'right_elbow'],
+      ['left_elbow', 'left_wrist'],
+      ['right_elbow', 'right_wrist'],
+      ['left_shoulder', 'left_hip'],
+      ['right_shoulder', 'right_hip'],
+      ['left_hip', 'right_hip'],
+      ['left_hip', 'left_knee'],
+      ['right_hip', 'right_knee'],
+      ['left_knee', 'left_ankle'],
+      ['right_knee', 'right_ankle'],
+    ] as const;
+
+    useEffect(() => {
+      const video = videoRef.current;
+      if (!video) return;
+
+      const drawPose = () => {
+        if (!videoRef.current || !canvasRef.current || !containerRef.current) return;
+        if (!showPose || !poseData?.length) {
+          const ctx = canvasRef.current.getContext('2d');
+          if (ctx) {
+            ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+          }
+          return;
+        }
+
+        const video = videoRef.current;
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        const currentTime = video.currentTime;
+        const frame =
+          poseData.find(f => Math.abs(f.timestamp - currentTime) < 0.1) ||
+          poseData[0];
+
+        if (!frame?.landmarks) return;
+
+        const containerRect = containerRef.current.getBoundingClientRect();
+
+        const videoAspect = video.videoWidth / video.videoHeight;
+        const containerAspect = containerRect.width / containerRect.height;
+
+        let displayWidth = containerRect.width;
+        let displayHeight = containerRect.height;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        if (videoAspect > containerAspect) {
+          displayHeight = containerRect.width / videoAspect;
+          offsetY = (containerRect.height - displayHeight) / 2;
+        } else {
+          displayWidth = containerRect.height * videoAspect;
+          offsetX = (containerRect.width - displayWidth) / 2;
+        }
+
+        canvas.width = displayWidth;
+        canvas.height = displayHeight;
+        canvas.style.width = `${displayWidth}px`;
+        canvas.style.height = `${displayHeight}px`;
+        canvas.style.left = `${offsetX}px`;
+        canvas.style.top = `${offsetY}px`;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = '#00ff00';
+        ctx.lineWidth = 3;
+
+        POSE_CONNECTIONS.forEach(([a, b]) => {
+          const p1 = frame.landmarks[a as string];
+          const p2 = frame.landmarks[b as string];
+          if (!p1 || !p2) return;
+          const visibility1 = (p1 as any).visibility ?? 1;
+          const visibility2 = (p2 as any).visibility ?? 1;
+          if (visibility1 < 0.5 || visibility2 < 0.5) return;
+
+          const x1 = (p1.x ?? 0) * displayWidth;
+          const y1 = (p1.y ?? 0) * displayHeight;
+          const x2 = (p2.x ?? 0) * displayWidth;
+          const y2 = (p2.y ?? 0) * displayHeight;
+
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+        });
+
+        ctx.fillStyle = '#00ff00';
+        Object.values(frame.landmarks).forEach(p => {
+          if (!p) return;
+          const visibility = (p as any).visibility ?? 1;
+          if (visibility < 0.5) return;
+          const x = (p.x ?? 0) * displayWidth;
+          const y = (p.y ?? 0) * displayHeight;
+          ctx.beginPath();
+          ctx.arc(x, y, 4, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      };
+
+      const redraw = () => drawPose();
+
+      video.addEventListener('timeupdate', redraw);
+      video.addEventListener('play', redraw);
+      video.addEventListener('loadedmetadata', redraw);
+      window.addEventListener('resize', redraw);
+
+      return () => {
+        video.removeEventListener('timeupdate', redraw);
+        video.removeEventListener('play', redraw);
+        video.removeEventListener('loadedmetadata', redraw);
+        window.removeEventListener('resize', redraw);
+      };
+    }, [poseData, showPose]);
+
+    if (!videoUrl) {
+      return (
+        <div className="relative aspect-video bg-background">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center space-y-4">
+              <div className="text-6xl">🎥</div>
+              <p className="text-muted-foreground">Video playback will be available here</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-4">
+        <div
+          ref={containerRef}
+          className="relative w-full aspect-video bg-black rounded-lg overflow-hidden"
+        >
+          <video
+            ref={videoRef}
+            src={videoUrl}
+            controls
+            className="w-full h-full object-contain"
+            crossOrigin="anonymous"
+            onError={onVideoError}
+          />
+
+          <canvas
+            ref={canvasRef}
+            className={`absolute top-0 left-0 pointer-events-none transition-opacity duration-300 ${
+              showPose ? 'opacity-100' : 'opacity-0'
+            }`}
+            style={{ zIndex: 1 }}
+          />
+
+          {poseData && poseData.length > 0 && (
+            <button
+              onClick={() => setShowPose(v => !v)}
+              className="absolute top-4 right-4 z-10 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-semibold transition-colors"
+            >
+              {showPose ? 'Hide Pose' : 'Show Pose'}
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <Layout>
       <div className="max-w-6xl mx-auto space-y-8">
@@ -291,61 +465,16 @@ export default function Results() {
 
         {/* Video Player with Pose Overlay */}
         <div className="bg-card border border-border rounded-lg overflow-hidden">
-          <div className="relative aspect-video bg-background">
-            {videoUrl ? (
-              <>
-                <video
-                  ref={videoRef}
-                  src={videoUrl}
-                  controls
-                  className="w-full h-full object-contain"
-                  crossOrigin="anonymous"
-                  onError={(e) => {
-                    console.error('Video playback error:', e);
-                    // Try fallback extensions if primary fails
-                    if (!videoUrl.includes('.mp4')) {
-                      setVideoUrl(`${API_BASE_URL}/uploads/${videoId}.mp4`);
-                    }
-                  }}
-                />
-                <canvas
-                  ref={canvasRef}
-                  className="absolute top-0 left-0 w-full h-full pointer-events-none"
-                  style={{ zIndex: 1 }}
-                />
-                {analysisResult.pose_data && analysisResult.pose_data.length > 0 && (
-                  <PoseOverlayCanvas
-                    videoRef={videoRef}
-                    canvasRef={canvasRef}
-                    poseData={analysisResult.pose_data}
-                    showOverlay={showPoseOverlay}
-                  />
-                )}
-                {analysisResult.pose_data && analysisResult.pose_data.length > 0 && (
-                  <div className="absolute top-4 right-4 z-10">
-                    <button
-                      onClick={() => setShowPoseOverlay(!showPoseOverlay)}
-                      className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
-                        showPoseOverlay
-                          ? 'bg-green-600 hover:bg-green-700 text-white'
-                          : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
-                      }`}
-                    >
-                      {showPoseOverlay ? 'Hide Pose' : 'Show Pose'}
-                    </button>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center space-y-4">
-                  <div className="text-6xl">🎥</div>
-                  <p className="text-muted-foreground">Video playback will be available here</p>
-                  <p className="text-sm text-muted-foreground/60">Video ID: {videoId}</p>
-                </div>
-              </div>
-            )}
-          </div>
+          <VideoPoseDisplay
+            videoUrl={videoUrl || ''}
+            poseData={analysisResult.pose_data || []}
+            onVideoError={() => {
+              // Try fallback extensions if primary fails
+              if (videoUrl && !videoUrl.includes('.mp4')) {
+                setVideoUrl(`${API_BASE_URL}/uploads/${videoId}.mp4`);
+              }
+            }}
+          />
         </div>
 
         {/* Feedback & Recommendations */}
