@@ -10,10 +10,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Only initialize PostHog on the client side
     if (typeof window !== 'undefined' && !initialized) {
-      const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY
-      const posthogHost = process.env.NEXT_PUBLIC_POSTHOG_HOST
-
-      // Use environment variables, with fallback to hardcoded values if env vars are missing/truncated
+      // Get environment variables
       const envKey = process.env.NEXT_PUBLIC_POSTHOG_KEY
       const envHost = process.env.NEXT_PUBLIC_POSTHOG_HOST
       
