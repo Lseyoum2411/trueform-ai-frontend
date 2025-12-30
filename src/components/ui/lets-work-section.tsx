@@ -257,7 +257,6 @@ export function LetsWorkTogether() {
           <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
             Ready to improve your athletic performance? Upload your videos and get instant AI-powered form analysis for basketball, golf, weightlifting, and more.
           </p>
-          <span className="text-xs tracking-widest uppercase text-muted-foreground/60">hello@formlab.ai</span>
         </div>
       </div>
     </section>
