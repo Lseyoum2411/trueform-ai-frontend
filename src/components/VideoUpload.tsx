@@ -26,7 +26,7 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
 
   const handleFile = useCallback(
     async (selectedFile: File) => {
-      const validation = validateVideoFile(selectedFile);
+      const validation = await validateVideoFile(selectedFile);
       if (!validation.valid) {
         onError?.(validation.error || 'Invalid file');
         return;
