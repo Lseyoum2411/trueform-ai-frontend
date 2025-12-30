@@ -27,7 +27,7 @@ export function LetsWorkTogether() {
   }
 
   return (
-    <section className="flex min-h-screen items-center justify-center px-6">
+    <section className="flex min-h-screen items-center justify-center px-6 -mt-12">
       <div className="relative flex flex-col items-center gap-12">
         <div
           className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-8 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
