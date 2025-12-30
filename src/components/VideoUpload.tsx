@@ -144,7 +144,7 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
                 </label>
               </div>
               <p className="text-xs text-muted-foreground/60 mt-4">
-                Supported: MP4, WebM, MOV, AVI (Max 100MB)
+                Supported: MP4, WebM, MOV, AVI (Max 100MB, 12 seconds)
               </p>
             </div>
           </>
