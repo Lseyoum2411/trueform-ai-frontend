@@ -28,7 +28,7 @@ export function LetsWorkTogether() {
 
   return (
     <section className="flex min-h-screen items-center justify-center px-6 -mt-12">
-      <div className="relative flex flex-col items-center gap-4 sm:gap-12">
+      <div className="relative flex flex-col items-center gap-6 sm:gap-12">
         <div
           className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-8 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
           style={{
@@ -169,7 +169,7 @@ export function LetsWorkTogether() {
             pointerEvents: isClicked ? "none" : "auto",
           }}
         >
-          <div className="flex flex-col items-center gap-3 sm:gap-6">
+          <div className="flex flex-col items-center gap-4 sm:gap-6">
             <h2
               className="relative text-center text-5xl font-light tracking-tight text-foreground sm:text-6xl md:text-7xl lg:text-8xl transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
               style={{
@@ -199,7 +199,7 @@ export function LetsWorkTogether() {
               </span>
             </h2>
 
-            <div className="relative mt-2 sm:mt-4 flex size-16 items-center justify-center sm:size-20">
+            <div className="relative mt-3 sm:mt-4 flex size-16 items-center justify-center sm:size-20">
               <div
                 className="pointer-events-none absolute inset-0 rounded-full border transition-all ease-out"
                 style={{
@@ -247,7 +247,7 @@ export function LetsWorkTogether() {
         </div>
 
         <div
-          className="mt-0 sm:mt-2 flex flex-col items-center gap-4 text-center transition-all duration-500 delay-100"
+          className="mt-2 sm:mt-2 flex flex-col items-center gap-4 text-center transition-all duration-500 delay-100"
           style={{
             opacity: isClicked ? 0 : 1,
             transform: isClicked ? "translateY(20px)" : "translateY(0)",
