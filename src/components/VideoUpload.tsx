@@ -4,6 +4,7 @@ import { useUploadVideo } from '@/hooks/useUploadVideo';
 import { validateVideoFile } from '@/utils/validators';
 import { Sport } from '@/types';
 import { Loader } from './Loader';
+import { capturePostHogEvent } from '@/lib/posthog';
 
 interface VideoUploadProps {
   sport: Sport;
@@ -39,6 +40,9 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
         if (!response.video_id) {
           throw new Error('Upload succeeded but video_id is missing');
         }
+
+        // Track successful video upload in PostHog
+        capturePostHogEvent('video_uploaded', { source: 'web' });
 
         onUploadSuccess?.(response.video_id);
         // Pass filename in query params for video playback

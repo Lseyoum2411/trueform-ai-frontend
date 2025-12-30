@@ -77,3 +77,10 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
 
   return <>{children}</>
 }
+
+// Helper function to safely capture PostHog events
+export function capturePostHogEvent(eventName: string, properties?: Record<string, any>) {
+  if (typeof window !== 'undefined' && posthog && posthog.__loaded) {
+    posthog.capture(eventName, properties)
+  }
+}
