@@ -304,9 +304,10 @@ export default function Results() {
 
         if (!frame?.landmarks) return;
 
+        // Get container dimensions for calculating video display area
         const containerRect = containerRef.current.getBoundingClientRect();
         
-        // Get video's natural dimensions
+        // Get video's natural (intrinsic) dimensions
         const videoNaturalWidth = video.videoWidth;
         const videoNaturalHeight = video.videoHeight;
         const videoAspect = videoNaturalWidth / videoNaturalHeight;
@@ -336,30 +337,47 @@ export default function Results() {
           offsetY = 0;
         }
 
-        // Set canvas size to match the actual video display area
-        canvas.width = displayWidth;
-        canvas.height = displayHeight;
+        // Set canvas size to match the actual video display area (use device pixel ratio for crisp rendering)
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = displayWidth * dpr;
+        canvas.height = displayHeight * dpr;
         
-        // Position canvas to exactly match video display area
-        canvas.style.position = 'absolute';
+        // Reset transform matrix and scale the context to match device pixel ratio
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.scale(dpr, dpr);
+        
+        // Set CSS size to match display dimensions (this is what the user sees)
         canvas.style.width = `${displayWidth}px`;
         canvas.style.height = `${displayHeight}px`;
+        
+        // Position canvas to exactly match video display area
+        // offsetX and offsetY are already relative to container, and container has position: relative
+        canvas.style.position = 'absolute';
         canvas.style.left = `${offsetX}px`;
         canvas.style.top = `${offsetY}px`;
         canvas.style.pointerEvents = 'none';
+        canvas.style.zIndex = '1';
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Clear canvas
+        ctx.clearRect(0, 0, displayWidth, displayHeight);
+        
+        // Set drawing styles
         ctx.strokeStyle = '#00ff00';
         ctx.lineWidth = 3;
+        ctx.fillStyle = '#00ff00';
 
+        // Draw pose connections
         POSE_CONNECTIONS.forEach(([a, b]) => {
           const p1 = frame.landmarks[a as string];
           const p2 = frame.landmarks[b as string];
           if (!p1 || !p2) return;
+          
           const visibility1 = (p1 as any).visibility ?? 1;
           const visibility2 = (p2 as any).visibility ?? 1;
           if (visibility1 < 0.5 || visibility2 < 0.5) return;
 
+          // Convert normalized coordinates (0-1) to canvas coordinates
+          // MediaPipe coordinates are normalized to video dimensions
           const x1 = (p1.x ?? 0) * displayWidth;
           const y1 = (p1.y ?? 0) * displayHeight;
           const x2 = (p2.x ?? 0) * displayWidth;
@@ -371,13 +389,16 @@ export default function Results() {
           ctx.stroke();
         });
 
-        ctx.fillStyle = '#00ff00';
+        // Draw pose landmarks (joints)
         Object.values(frame.landmarks).forEach(p => {
           if (!p) return;
           const visibility = (p as any).visibility ?? 1;
           if (visibility < 0.5) return;
+          
+          // Convert normalized coordinates to canvas coordinates
           const x = (p.x ?? 0) * displayWidth;
           const y = (p.y ?? 0) * displayHeight;
+          
           ctx.beginPath();
           ctx.arc(x, y, 4, 0, Math.PI * 2);
           ctx.fill();
@@ -429,10 +450,9 @@ export default function Results() {
 
           <canvas
             ref={canvasRef}
-            className={`absolute top-0 left-0 pointer-events-none transition-opacity duration-300 ${
+            className={`absolute pointer-events-none transition-opacity duration-300 ${
               showPose ? 'opacity-100' : 'opacity-0'
             }`}
-            style={{ zIndex: 1 }}
           />
 
           {poseData && poseData.length > 0 && (
