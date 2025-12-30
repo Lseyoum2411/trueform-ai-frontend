@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import { Layout } from '@/components/Layout';
 import { usePollStatus } from '@/hooks/usePollStatus';
 import { getAnalysisResults, getVideoStatus } from '@/lib/api';
-import { AnalysisResult, UIFeedback, VideoStatus, PoseDataFrame } from '@/types';
+import { AnalysisResult, UIFeedback, VideoStatus, PoseDataFrame, LandmarkCoordinates } from '@/types';
 import { Loader } from '@/components/Loader';
 import { formatFeedbackItem, formatStrengthText, formatMetricLabel, FormattedFeedback } from '@/utils/feedbackFormatter';
 
@@ -253,6 +253,7 @@ export default function Results() {
     onVideoError: () => void;
   }> = ({ videoUrl, poseData, onVideoError }) => {
     const [showPose, setShowPose] = useState(true);
+    const [videoRotation, setVideoRotation] = useState(0);
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -272,6 +273,84 @@ export default function Results() {
       ['left_knee', 'left_ankle'],
       ['right_knee', 'right_ankle'],
     ] as const;
+
+    // Coordinate transformation function to handle video rotation
+    const transformLandmark = (
+      landmark: LandmarkCoordinates | { x: number; y: number; z?: number },
+      rotation: number,
+      width: number,
+      height: number
+    ): { x: number; y: number } => {
+      const x = landmark.x;
+      const y = landmark.y;
+
+      switch (rotation) {
+        case 90:
+          // Rotate 90° clockwise: (x, y) -> (y, 1-x)
+          return {
+            x: y * width,
+            y: (1 - x) * height,
+          };
+        case 180:
+          // Rotate 180°: (x, y) -> (1-x, 1-y)
+          return {
+            x: (1 - x) * width,
+            y: (1 - y) * height,
+          };
+        case 270:
+          // Rotate 270° clockwise: (x, y) -> (1-y, x)
+          return {
+            x: (1 - y) * width,
+            y: x * height,
+          };
+        default:
+          // No rotation
+          return {
+            x: x * width,
+            y: y * height,
+          };
+      }
+    };
+
+    // Detect video rotation from dimensions
+    useEffect(() => {
+      const video = videoRef.current;
+      if (!video) return;
+
+      const detectRotation = () => {
+        const videoWidth = video.videoWidth;
+        const videoHeight = video.videoHeight;
+        const displayWidth = video.clientWidth;
+        const displayHeight = video.clientHeight;
+
+        // Check if video dimensions suggest rotation
+        // Portrait video (height > width) displayed in landscape suggests 90° rotation
+        const isPortraitVideo = videoHeight > videoWidth;
+        const isLandscapeDisplay = displayWidth > displayHeight;
+
+        if (isPortraitVideo && isLandscapeDisplay) {
+          setVideoRotation(90);
+        } else if (videoWidth > videoHeight && displayHeight > displayWidth) {
+          // Landscape video displayed in portrait - could be 270° or 90° counter-clockwise
+          setVideoRotation(270);
+        } else {
+          setVideoRotation(0);
+        }
+      };
+
+      video.addEventListener('loadedmetadata', detectRotation);
+      window.addEventListener('resize', detectRotation);
+      
+      // Also check if metadata is already loaded
+      if (video.videoWidth && video.videoHeight) {
+        detectRotation();
+      }
+
+      return () => {
+        video.removeEventListener('loadedmetadata', detectRotation);
+        window.removeEventListener('resize', detectRotation);
+      };
+    }, [videoUrl]);
 
     useEffect(() => {
       const video = videoRef.current;
@@ -366,7 +445,7 @@ export default function Results() {
         ctx.lineWidth = 3;
         ctx.fillStyle = '#00ff00';
 
-        // Draw pose connections
+        // Draw pose connections with rotation applied
         POSE_CONNECTIONS.forEach(([a, b]) => {
           const p1 = frame.landmarks[a as string];
           const p2 = frame.landmarks[b as string];
@@ -376,31 +455,27 @@ export default function Results() {
           const visibility2 = (p2 as any).visibility ?? 1;
           if (visibility1 < 0.5 || visibility2 < 0.5) return;
 
-          // Convert normalized coordinates (0-1) to canvas coordinates
-          // MediaPipe coordinates are normalized to video dimensions
-          const x1 = (p1.x ?? 0) * displayWidth;
-          const y1 = (p1.y ?? 0) * displayHeight;
-          const x2 = (p2.x ?? 0) * displayWidth;
-          const y2 = (p2.y ?? 0) * displayHeight;
+          // Apply rotation transformation
+          const startPos = transformLandmark(p1, videoRotation, displayWidth, displayHeight);
+          const endPos = transformLandmark(p2, videoRotation, displayWidth, displayHeight);
 
           ctx.beginPath();
-          ctx.moveTo(x1, y1);
-          ctx.lineTo(x2, y2);
+          ctx.moveTo(startPos.x, startPos.y);
+          ctx.lineTo(endPos.x, endPos.y);
           ctx.stroke();
         });
 
-        // Draw pose landmarks (joints)
+        // Draw pose landmarks (joints) with rotation applied
         Object.values(frame.landmarks).forEach(p => {
           if (!p) return;
           const visibility = (p as any).visibility ?? 1;
           if (visibility < 0.5) return;
           
-          // Convert normalized coordinates to canvas coordinates
-          const x = (p.x ?? 0) * displayWidth;
-          const y = (p.y ?? 0) * displayHeight;
+          // Apply rotation transformation
+          const pos = transformLandmark(p, videoRotation, displayWidth, displayHeight);
           
           ctx.beginPath();
-          ctx.arc(x, y, 4, 0, Math.PI * 2);
+          ctx.arc(pos.x, pos.y, 4, 0, Math.PI * 2);
           ctx.fill();
         });
       };
@@ -418,7 +493,7 @@ export default function Results() {
         video.removeEventListener('loadedmetadata', redraw);
         window.removeEventListener('resize', redraw);
       };
-    }, [poseData, showPose]);
+    }, [poseData, showPose, videoRotation]);
 
     if (!videoUrl) {
       return (
