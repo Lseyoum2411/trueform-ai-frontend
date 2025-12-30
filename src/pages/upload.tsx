@@ -54,8 +54,8 @@ export default function Upload() {
         putting_stroke: 'Putting Stroke',
         putt: 'Putting Stroke', // Legacy support
         // Weightlifting
-        barbell_squat: 'Barbell Squat',
-        back_squat: 'Barbell Squat', // Legacy support
+        barbell_squat: 'Back Squat',
+        back_squat: 'Back Squat', // Legacy support
         front_squat: 'Front Squat',
         deadlift: 'Deadlift',
         romanian_deadlift: 'Romanian Deadlift',
