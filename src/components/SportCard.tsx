@@ -1,0 +1,55 @@
+import React from 'react';
+import { Sport } from '@/types';
+
+interface SportCardProps {
+  sport: Sport;
+  title: string;
+  description?: string;
+  onClick: () => void;
+}
+
+const sportIcons: Record<string, string> = {
+  basketball: '🏀',
+  golf: '⛳',
+  weightlifting: '🏋️',
+  baseball: '⚾',
+  soccer: '⚽',
+  track_field: '🏃',
+  volleyball: '🏐',
+  lacrosse: '🥍',
+};
+
+export const SportCard: React.FC<SportCardProps> = ({
+  sport,
+  title,
+  description,
+  onClick,
+}) => {
+  return (
+    <button
+      onClick={onClick}
+      className="w-full p-6 bg-card border border-border rounded-lg hover:border-primary hover:bg-card/80 transition-all duration-200 text-left group"
+    >
+      <div className="flex items-center space-x-4">
+        <div className="text-4xl">{sportIcons[sport]}</div>
+        <div className="flex-1">
+          <h3 className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors">
+            {title}
+          </h3>
+          {description && (
+            <p className="text-muted-foreground mt-1 text-sm">{description}</p>
+          )}
+        </div>
+        <div className="text-muted-foreground group-hover:text-primary transition-colors">
+          →
+        </div>
+      </div>
+    </button>
+  );
+};
+
+
+
+
+
+
