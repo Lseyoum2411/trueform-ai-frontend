@@ -253,6 +253,7 @@ export default function Results() {
     onVideoError: () => void;
   }> = ({ videoUrl, poseData, onVideoError }) => {
     const [showPose, setShowPose] = useState(true);
+    const [videoOrientation, setVideoOrientation] = useState<'portrait' | 'landscape'>('landscape');
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -357,24 +358,63 @@ export default function Results() {
 
     /**
      * Transform normalized MediaPipe landmark coordinates to canvas pixel coordinates.
-     * Backend normalizes orientation once before MediaPipe (rotates frames to upright),
-     * so landmarks are in normalized coordinate space that matches the browser-displayed video.
-     * We do direct coordinate mapping here (no additional transforms needed).
+     * For portrait videos, applies 90° clockwise rotation: (x, y) → (1-y, x)
      */
     const transformLandmark = (
       landmark: LandmarkCoordinates | { x: number; y: number; z?: number },
       width: number,
       height: number
     ): { x: number; y: number } => {
-      // Backend normalizes video orientation before MediaPipe processing.
-      // Landmarks are in normalized coordinate space (upright orientation).
-      // Browser auto-applies rotation metadata when displaying, so normalized landmarks
-      // match the displayed video orientation. Direct mapping is all we need.
-      return {
-        x: landmark.x * width,
-        y: landmark.y * height,
-      };
+      if (videoOrientation === 'portrait') {
+        // CRITICAL: Portrait videos need 90° CLOCKWISE rotation
+        // Transform: (x, y) → (1-y, x)
+        // This maps portrait coordinates to landscape display
+        return {
+          x: (1 - landmark.y) * width,
+          y: landmark.x * height,
+        };
+      } else {
+        // Landscape: no rotation needed, direct mapping
+        return {
+          x: landmark.x * width,
+          y: landmark.y * height,
+        };
+      }
     };
+
+    // Detect video orientation (portrait vs landscape)
+    useEffect(() => {
+      const video = videoRef.current;
+      if (!video) return;
+
+      const detectOrientation = () => {
+        const width = video.videoWidth;
+        const height = video.videoHeight;
+        
+        if (width > 0 && height > 0) {
+          console.log('=== Video Metadata ===');
+          console.log('Video dimensions:', width, 'x', height);
+          
+          // Portrait: height > width
+          const isPortrait = height > width;
+          const orientation = isPortrait ? 'portrait' : 'landscape';
+          
+          setVideoOrientation(orientation);
+          console.log('Detected orientation:', orientation);
+          console.log('Needs 90° rotation:', isPortrait);
+        }
+      };
+
+      video.addEventListener('loadedmetadata', detectOrientation);
+      // Check immediately if already loaded
+      if (video.videoWidth > 0 && video.videoHeight > 0) {
+        detectOrientation();
+      }
+      
+      return () => {
+        video.removeEventListener('loadedmetadata', detectOrientation);
+      };
+    }, [videoUrl]);
 
     useEffect(() => {
       const video = videoRef.current;
@@ -437,23 +477,17 @@ export default function Results() {
         // Clear canvas
         ctx.clearRect(0, 0, displayWidth, displayHeight);
         
-        // SAFETY CHECK: Detect 90° rotation misalignment before rendering
-        // If video is portrait but skeleton appears horizontally oriented, skip overlay
-        const isPortrait = video.videoHeight > video.videoWidth;
-        if (frame?.landmarks && isPortrait) {
-          const leftShoulder = frame.landmarks["left_shoulder"];
-          const rightShoulder = frame.landmarks["right_shoulder"];
-          if (leftShoulder && rightShoulder) {
-            // Check if shoulders span vertically (horizontal skeleton in portrait video = misaligned)
-            const shoulderYDiff = Math.abs((leftShoulder as any).y - (rightShoulder as any).y);
-            const shoulderXDiff = Math.abs((leftShoulder as any).x - (rightShoulder as any).x);
-            // If Y difference (vertical span) is much larger than X difference (horizontal span),
-            // skeleton is rotated 90° - skip overlay rendering
-            if (shoulderYDiff > shoulderXDiff * 1.5 && shoulderYDiff > 0.3) {
-              console.warn("Pose overlay alignment check failed: skeleton appears rotated 90° in portrait video. Skipping overlay rendering.");
-              ctx.clearRect(0, 0, displayWidth, displayHeight);
-              return; // Skip overlay rendering, do NOT affect score or feedback
-            }
+        // Debug logging for transformation
+        if (frame?.landmarks && Object.keys(frame.landmarks).length > 0) {
+          const firstLandmarkKey = Object.keys(frame.landmarks)[0];
+          const firstLandmark = frame.landmarks[firstLandmarkKey as string];
+          if (firstLandmark && typeof firstLandmark === 'object' && 'x' in firstLandmark) {
+            const transformed = transformLandmark(firstLandmark as any, displayWidth, displayHeight);
+            console.log('=== Pose Drawing Debug ===');
+            console.log('Video orientation:', videoOrientation);
+            console.log('Original landmark 0:', (firstLandmark as any).x?.toFixed(3), (firstLandmark as any).y?.toFixed(3));
+            console.log('Transformed to:', transformed.x.toFixed(1), transformed.y.toFixed(1));
+            console.log('Canvas size:', displayWidth.toFixed(0), 'x', displayHeight.toFixed(0));
           }
         }
         
@@ -510,7 +544,7 @@ export default function Results() {
         video.removeEventListener('loadedmetadata', redraw);
         window.removeEventListener('resize', redraw);
       };
-    }, [poseData, showPose]);
+    }, [poseData, showPose, videoOrientation]); // Add videoOrientation to dependencies
 
     if (!videoUrl) {
       return (
