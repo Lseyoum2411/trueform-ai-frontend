@@ -253,8 +253,7 @@ export default function Results() {
     onVideoError: () => void;
   }> = ({ videoUrl, poseData, onVideoError }) => {
     const [showPose, setShowPose] = useState(true);
-    const [debugMode, setDebugMode] = useState(false);
-    const [overlayValid, setOverlayValid] = useState(true);
+    const [needsRotation, setNeedsRotation] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -358,51 +357,57 @@ export default function Results() {
     };
 
     /**
-     * Validate pose overlay alignment by checking if landmark positions are reasonable.
-     * Returns true if overlay appears valid, false if there's likely a transform issue.
-     */
-    const validatePoseAlignment = (frame: PoseDataFrame, renderRect: { width: number; height: number }): boolean => {
-      if (!frame?.landmarks) return false;
-      
-      const { left_shoulder, right_shoulder } = frame.landmarks;
-      if (!left_shoulder || !right_shoulder) return false;
-      
-      // Check if shoulder width is reasonable (should be roughly 20-40% of video width)
-      const shoulderWidth = Math.abs((left_shoulder as any).x - (right_shoulder as any).x);
-      const normalizedWidth = shoulderWidth * renderRect.width;
-      const reasonableMin = renderRect.width * 0.15;
-      const reasonableMax = renderRect.width * 0.60;
-      
-      if (normalizedWidth < reasonableMin || normalizedWidth > reasonableMax) {
-        console.warn(`Pose alignment validation failed: shoulder width ${normalizedWidth.toFixed(0)}px is outside reasonable range [${reasonableMin.toFixed(0)}, ${reasonableMax.toFixed(0)}]`);
-        return false;
-      }
-      
-      // Check if landmarks are within bounds (0-1 range)
-      const allInBounds = Object.values(frame.landmarks).every((lm: any) => {
-        return lm && typeof lm.x === 'number' && typeof lm.y === 'number' &&
-               lm.x >= 0 && lm.x <= 1 && lm.y >= 0 && lm.y <= 1;
-      });
-      
-      return allInBounds;
-    };
-
-    /**
      * Transform normalized MediaPipe landmark coordinates to canvas pixel coordinates.
-     * MediaPipe coordinates are normalized (0-1) with origin at top-left.
+     * Handles portrait video rotation transformation when needed.
      */
     const transformLandmark = (
       landmark: LandmarkCoordinates | { x: number; y: number; z?: number },
       width: number,
       height: number
     ): { x: number; y: number } => {
-      // Map normalized coordinates (0-1) directly to canvas dimensions
-      // Backend handles rotation correction, so we just do direct mapping here
-      return {
-        x: landmark.x * width,
-        y: landmark.y * height,
-      };
+      if (needsRotation) {
+        // Portrait video: rotate 90° clockwise
+        // Transform: (x, y) -> (y, 1-x)
+        // This accounts for the fact that portrait videos may have coordinate system mismatch
+        return {
+          x: landmark.y * width,
+          y: (1 - landmark.x) * height,
+        };
+      } else {
+        // Landscape video: direct mapping
+        return {
+          x: landmark.x * width,
+          y: landmark.y * height,
+        };
+      }
     };
+
+    // Detect video orientation when metadata loads
+    // Portrait videos (height > width) may need coordinate transformation
+    useEffect(() => {
+      const video = videoRef.current;
+      if (!video) return;
+
+      const handleMetadata = () => {
+        const { videoWidth, videoHeight } = video;
+        if (videoWidth > 0 && videoHeight > 0) {
+          // Portrait video detected if height > width
+          // These videos often have coordinate system mismatch that requires rotation transform
+          const isPortrait = videoHeight > videoWidth;
+          setNeedsRotation(isPortrait);
+        }
+      };
+
+      video.addEventListener('loadedmetadata', handleMetadata);
+      // Also check immediately if already loaded
+      if (video.videoWidth > 0 && video.videoHeight > 0) {
+        handleMetadata();
+      }
+
+      return () => {
+        video.removeEventListener('loadedmetadata', handleMetadata);
+      };
+    }, [videoUrl]);
 
     useEffect(() => {
       const video = videoRef.current;
@@ -442,16 +447,6 @@ export default function Results() {
           return;
         }
 
-        // Validate pose alignment
-        const isValid = validatePoseAlignment(frame, { width: displayWidth, height: displayHeight });
-        setOverlayValid(isValid);
-        
-        if (!isValid && !debugMode) {
-          // If overlay is misaligned and not in debug mode, hide it
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          return;
-        }
-
         // Set canvas size to match the actual video display area (use device pixel ratio for crisp rendering)
         const dpr = window.devicePixelRatio || 1;
         canvas.width = displayWidth * dpr;
@@ -475,29 +470,10 @@ export default function Results() {
         // Clear canvas
         ctx.clearRect(0, 0, displayWidth, displayHeight);
         
-        // Draw debug information if enabled
-        if (debugMode) {
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-          ctx.font = '12px monospace';
-          ctx.fillText(`Video: ${video.videoWidth}x${video.videoHeight}`, 10, 20);
-          ctx.fillText(`Display: ${displayWidth.toFixed(0)}x${displayHeight.toFixed(0)} @ (${offsetX.toFixed(0)}, ${offsetY.toFixed(0)})`, 10, 35);
-          ctx.fillText(`Time: ${currentTime.toFixed(2)}s`, 10, 50);
-          if (frame.timestamp !== undefined) {
-            ctx.fillText(`Pose Time: ${frame.timestamp.toFixed(2)}s (diff: ${Math.abs(frame.timestamp - currentTime).toFixed(3)}s)`, 10, 65);
-          }
-          ctx.fillText(`Frame: ${frame.frame_number !== undefined ? frame.frame_number : 'N/A'}`, 10, 80);
-          ctx.fillText(`Valid: ${isValid ? 'YES' : 'NO'}`, 10, 95);
-          
-          // Draw bounding box around video display area
-          ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
-          ctx.lineWidth = 2;
-          ctx.strokeRect(0, 0, displayWidth, displayHeight);
-        }
-        
         // Set drawing styles for pose overlay
-        ctx.strokeStyle = isValid ? '#00ff00' : '#ff0000'; // Red if invalid
+        ctx.strokeStyle = '#00ff00';
         ctx.lineWidth = 3;
-        ctx.fillStyle = isValid ? '#00ff00' : '#ff0000';
+        ctx.fillStyle = '#00ff00';
 
         // Draw pose connections
         POSE_CONNECTIONS.forEach(([a, b]) => {
@@ -531,14 +507,6 @@ export default function Results() {
           ctx.beginPath();
           ctx.arc(pos.x, pos.y, 4, 0, Math.PI * 2);
           ctx.fill();
-          
-          // Draw landmark name in debug mode
-          if (debugMode) {
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-            ctx.font = '8px monospace';
-            ctx.fillText(name.substring(0, 4), pos.x + 6, pos.y - 6);
-            ctx.fillStyle = isValid ? '#00ff00' : '#ff0000';
-          }
         });
       };
 
@@ -555,7 +523,7 @@ export default function Results() {
         video.removeEventListener('loadedmetadata', redraw);
         window.removeEventListener('resize', redraw);
       };
-    }, [poseData, showPose, debugMode]);
+    }, [poseData, showPose, needsRotation]);
 
     if (!videoUrl) {
       return (
@@ -593,30 +561,12 @@ export default function Results() {
           />
 
           {poseData && poseData.length > 0 && (
-            <div className="absolute top-4 right-4 z-10 flex gap-2">
-              <button
-                onClick={() => setDebugMode(d => !d)}
-                className={`px-3 py-2 rounded-md font-semibold transition-colors text-xs ${
-                  debugMode 
-                    ? 'bg-yellow-600 hover:bg-yellow-700 text-white' 
-                    : 'bg-gray-600 hover:bg-gray-700 text-white'
-                }`}
-                title="Toggle debug overlay information"
-              >
-                Debug
-              </button>
-              <button
-                onClick={() => setShowPose(v => !v)}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-semibold transition-colors"
-              >
-                {showPose ? 'Hide Pose' : 'Show Pose'}
-              </button>
-            </div>
-          )}
-          {!overlayValid && !debugMode && (
-            <div className="absolute bottom-4 left-4 right-4 z-10 bg-yellow-900/90 border border-yellow-600 text-yellow-100 px-4 py-2 rounded-md text-sm">
-              ⚠️ Pose overlay may be misaligned. Enable Debug mode to diagnose.
-            </div>
+            <button
+              onClick={() => setShowPose(v => !v)}
+              className="absolute top-4 right-4 z-10 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-semibold transition-colors"
+            >
+              {showPose ? 'Hide Pose' : 'Show Pose'}
+            </button>
           )}
         </div>
       </div>
