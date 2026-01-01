@@ -253,7 +253,6 @@ export default function Results() {
     onVideoError: () => void;
   }> = ({ videoUrl, poseData, onVideoError }) => {
     const [showPose, setShowPose] = useState(true);
-    const [needsRotation, setNeedsRotation] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -358,56 +357,20 @@ export default function Results() {
 
     /**
      * Transform normalized MediaPipe landmark coordinates to canvas pixel coordinates.
-     * Handles portrait video rotation transformation when needed.
+     * Backend already handles rotation correction, so we do direct mapping here.
      */
     const transformLandmark = (
       landmark: LandmarkCoordinates | { x: number; y: number; z?: number },
       width: number,
       height: number
     ): { x: number; y: number } => {
-      if (needsRotation) {
-        // Portrait video: rotate 90° clockwise
-        // Transform: (x, y) -> (y, 1-x)
-        // This accounts for the fact that portrait videos may have coordinate system mismatch
-        return {
-          x: landmark.y * width,
-          y: (1 - landmark.x) * height,
-        };
-      } else {
-        // Landscape video: direct mapping
-        return {
-          x: landmark.x * width,
-          y: landmark.y * height,
-        };
-      }
+      // Backend already inverse-transforms landmarks to match the displayed video orientation
+      // So we just need to do direct coordinate mapping
+      return {
+        x: landmark.x * width,
+        y: landmark.y * height,
+      };
     };
-
-    // Detect video orientation when metadata loads
-    // Portrait videos (height > width) may need coordinate transformation
-    useEffect(() => {
-      const video = videoRef.current;
-      if (!video) return;
-
-      const handleMetadata = () => {
-        const { videoWidth, videoHeight } = video;
-        if (videoWidth > 0 && videoHeight > 0) {
-          // Portrait video detected if height > width
-          // These videos often have coordinate system mismatch that requires rotation transform
-          const isPortrait = videoHeight > videoWidth;
-          setNeedsRotation(isPortrait);
-        }
-      };
-
-      video.addEventListener('loadedmetadata', handleMetadata);
-      // Also check immediately if already loaded
-      if (video.videoWidth > 0 && video.videoHeight > 0) {
-        handleMetadata();
-      }
-
-      return () => {
-        video.removeEventListener('loadedmetadata', handleMetadata);
-      };
-    }, [videoUrl]);
 
     useEffect(() => {
       const video = videoRef.current;
@@ -523,7 +486,7 @@ export default function Results() {
         video.removeEventListener('loadedmetadata', redraw);
         window.removeEventListener('resize', redraw);
       };
-    }, [poseData, showPose, needsRotation]);
+    }, [poseData, showPose]);
 
     if (!videoUrl) {
       return (
