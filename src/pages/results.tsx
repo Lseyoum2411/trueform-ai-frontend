@@ -357,15 +357,19 @@ export default function Results() {
 
     /**
      * Transform normalized MediaPipe landmark coordinates to canvas pixel coordinates.
-     * Backend already handles rotation correction, so we do direct mapping here.
+     * Backend normalizes orientation once before MediaPipe (rotates frames to upright),
+     * so landmarks are in normalized coordinate space that matches the browser-displayed video.
+     * We do direct coordinate mapping here (no additional transforms needed).
      */
     const transformLandmark = (
       landmark: LandmarkCoordinates | { x: number; y: number; z?: number },
       width: number,
       height: number
     ): { x: number; y: number } => {
-      // Backend already inverse-transforms landmarks to match the displayed video orientation
-      // So we just need to do direct coordinate mapping
+      // Backend normalizes video orientation before MediaPipe processing.
+      // Landmarks are in normalized coordinate space (upright orientation).
+      // Browser auto-applies rotation metadata when displaying, so normalized landmarks
+      // match the displayed video orientation. Direct mapping is all we need.
       return {
         x: landmark.x * width,
         y: landmark.y * height,
