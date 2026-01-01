@@ -437,6 +437,26 @@ export default function Results() {
         // Clear canvas
         ctx.clearRect(0, 0, displayWidth, displayHeight);
         
+        // SAFETY CHECK: Detect 90° rotation misalignment before rendering
+        // If video is portrait but skeleton appears horizontally oriented, skip overlay
+        const isPortrait = video.videoHeight > video.videoWidth;
+        if (frame?.landmarks && isPortrait) {
+          const leftShoulder = frame.landmarks["left_shoulder"];
+          const rightShoulder = frame.landmarks["right_shoulder"];
+          if (leftShoulder && rightShoulder) {
+            // Check if shoulders span vertically (horizontal skeleton in portrait video = misaligned)
+            const shoulderYDiff = Math.abs((leftShoulder as any).y - (rightShoulder as any).y);
+            const shoulderXDiff = Math.abs((leftShoulder as any).x - (rightShoulder as any).x);
+            // If Y difference (vertical span) is much larger than X difference (horizontal span),
+            // skeleton is rotated 90° - skip overlay rendering
+            if (shoulderYDiff > shoulderXDiff * 1.5 && shoulderYDiff > 0.3) {
+              console.warn("Pose overlay alignment check failed: skeleton appears rotated 90° in portrait video. Skipping overlay rendering.");
+              ctx.clearRect(0, 0, displayWidth, displayHeight);
+              return; // Skip overlay rendering, do NOT affect score or feedback
+            }
+          }
+        }
+        
         // Set drawing styles for pose overlay
         ctx.strokeStyle = '#00ff00';
         ctx.lineWidth = 3;
