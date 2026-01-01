@@ -253,7 +253,8 @@ export default function Results() {
     onVideoError: () => void;
   }> = ({ videoUrl, poseData, onVideoError }) => {
     const [showPose, setShowPose] = useState(true);
-    const [videoRotation, setVideoRotation] = useState(0);
+    const [debugMode, setDebugMode] = useState(false);
+    const [overlayValid, setOverlayValid] = useState(true);
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -274,34 +275,134 @@ export default function Results() {
       ['right_knee', 'right_ankle'],
     ] as const;
 
-    // Coordinate transformation function - maps normalized MediaPipe coordinates to canvas space
-    // MediaPipe coordinates are normalized (0-1) with origin at top-left, matching video orientation
+    /**
+     * Get the actual video display rectangle accounting for object-fit: contain.
+     * This is critical for aligning overlay with the displayed video.
+     */
+    const getVideoRenderRect = (
+      video: HTMLVideoElement,
+      container: HTMLElement
+    ): { x: number; y: number; width: number; height: number } => {
+      const containerRect = container.getBoundingClientRect();
+      const videoNaturalWidth = video.videoWidth;
+      const videoNaturalHeight = video.videoHeight;
+      
+      if (!videoNaturalWidth || !videoNaturalHeight) {
+        return { x: 0, y: 0, width: containerRect.width, height: containerRect.height };
+      }
+      
+      const videoAspect = videoNaturalWidth / videoNaturalHeight;
+      const containerAspect = containerRect.width / containerRect.height;
+      
+      let displayWidth: number;
+      let displayHeight: number;
+      let offsetX: number;
+      let offsetY: number;
+      
+      if (videoAspect > containerAspect) {
+        // Video is wider - letterboxing (black bars top/bottom)
+        displayWidth = containerRect.width;
+        displayHeight = containerRect.width / videoAspect;
+        offsetX = 0;
+        offsetY = (containerRect.height - displayHeight) / 2;
+      } else {
+        // Video is taller - pillarboxing (black bars left/right)
+        displayWidth = containerRect.height * videoAspect;
+        displayHeight = containerRect.height;
+        offsetX = (containerRect.width - displayWidth) / 2;
+        offsetY = 0;
+      }
+      
+      return { x: offsetX, y: offsetY, width: displayWidth, height: displayHeight };
+    };
+
+    /**
+     * Find the closest pose frame to the current video time.
+     * Handles both timestamp-based and frame-number-based pose data.
+     */
+    const findNearestPoseFrame = (currentTime: number): PoseDataFrame | null => {
+      if (!poseData || poseData.length === 0) return null;
+      
+      // Try timestamp-based matching first (new format)
+      const withTimestamps = poseData.filter(f => typeof f.timestamp === 'number');
+      if (withTimestamps.length > 0) {
+        // Find frame with closest timestamp (within 0.1s tolerance)
+        let closest = withTimestamps[0];
+        let minDiff = Math.abs(closest.timestamp! - currentTime);
+        
+        for (const frame of withTimestamps) {
+          const diff = Math.abs(frame.timestamp! - currentTime);
+          if (diff < minDiff) {
+            minDiff = diff;
+            closest = frame;
+          }
+        }
+        
+        // Only use if within reasonable tolerance (0.1s)
+        if (minDiff < 0.1) {
+          return closest;
+        }
+      }
+      
+      // Fallback: estimate frame index from time (assumes 30fps if video metadata unavailable)
+      const video = videoRef.current;
+      if (video && video.videoWidth > 0) {
+        const estimatedFPS = 30; // Default assumption
+        const estimatedFrameIndex = Math.round(currentTime * estimatedFPS);
+        const frameIndex = Math.min(estimatedFrameIndex, poseData.length - 1);
+        return poseData[Math.max(0, frameIndex)] || poseData[0];
+      }
+      
+      // Last resort: return first frame
+      return poseData[0];
+    };
+
+    /**
+     * Validate pose overlay alignment by checking if landmark positions are reasonable.
+     * Returns true if overlay appears valid, false if there's likely a transform issue.
+     */
+    const validatePoseAlignment = (frame: PoseDataFrame, renderRect: { width: number; height: number }): boolean => {
+      if (!frame?.landmarks) return false;
+      
+      const { left_shoulder, right_shoulder } = frame.landmarks;
+      if (!left_shoulder || !right_shoulder) return false;
+      
+      // Check if shoulder width is reasonable (should be roughly 20-40% of video width)
+      const shoulderWidth = Math.abs((left_shoulder as any).x - (right_shoulder as any).x);
+      const normalizedWidth = shoulderWidth * renderRect.width;
+      const reasonableMin = renderRect.width * 0.15;
+      const reasonableMax = renderRect.width * 0.60;
+      
+      if (normalizedWidth < reasonableMin || normalizedWidth > reasonableMax) {
+        console.warn(`Pose alignment validation failed: shoulder width ${normalizedWidth.toFixed(0)}px is outside reasonable range [${reasonableMin.toFixed(0)}, ${reasonableMax.toFixed(0)}]`);
+        return false;
+      }
+      
+      // Check if landmarks are within bounds (0-1 range)
+      const allInBounds = Object.values(frame.landmarks).every((lm: any) => {
+        return lm && typeof lm.x === 'number' && typeof lm.y === 'number' &&
+               lm.x >= 0 && lm.x <= 1 && lm.y >= 0 && lm.y <= 1;
+      });
+      
+      return allInBounds;
+    };
+
+    /**
+     * Transform normalized MediaPipe landmark coordinates to canvas pixel coordinates.
+     * MediaPipe coordinates are normalized (0-1) with origin at top-left.
+     */
     const transformLandmark = (
       landmark: LandmarkCoordinates | { x: number; y: number; z?: number },
-      rotation: number,
       width: number,
       height: number
     ): { x: number; y: number } => {
-      // No rotation transformation needed - MediaPipe coordinates already match video orientation
-      // Simply map normalized coordinates (0-1) to canvas dimensions
+      // Map normalized coordinates (0-1) directly to canvas dimensions
+      // Backend handles rotation correction, so we just do direct mapping here
       return {
         x: landmark.x * width,
         y: landmark.y * height,
       };
     };
-
-    // Detect video rotation from dimensions
-    // For portrait videos, MediaPipe coordinates should match video orientation
-    // No rotation transformation needed - coordinates map directly to video display area
-    useEffect(() => {
-      const video = videoRef.current;
-      if (!video) return;
-
-      // MediaPipe coordinates are normalized (0-1) and match the video's intrinsic orientation
-      // We don't need to rotate coordinates - they should map directly to the displayed video area
-      // The canvas positioning and sizing already handles the aspect ratio correctly
-      setVideoRotation(0);
-    }, [videoUrl]);
 
     useEffect(() => {
       const video = videoRef.current;
@@ -327,44 +428,28 @@ export default function Results() {
           return;
         }
 
+        // Get accurate video display rectangle
+        const renderRect = getVideoRenderRect(video, containerRef.current);
+        const { x: offsetX, y: offsetY, width: displayWidth, height: displayHeight } = renderRect;
+
+        // Find pose frame closest to current video time
         const currentTime = video.currentTime;
-        const frame =
-          poseData.find(f => Math.abs(f.timestamp - currentTime) < 0.1) ||
-          poseData[0];
+        const frame = findNearestPoseFrame(currentTime);
 
-        if (!frame?.landmarks) return;
+        if (!frame?.landmarks) {
+          // No pose data for this time - clear canvas
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          return;
+        }
 
-        // Get container dimensions for calculating video display area
-        const containerRect = containerRef.current.getBoundingClientRect();
+        // Validate pose alignment
+        const isValid = validatePoseAlignment(frame, { width: displayWidth, height: displayHeight });
+        setOverlayValid(isValid);
         
-        // Get video's natural (intrinsic) dimensions
-        const videoNaturalWidth = video.videoWidth;
-        const videoNaturalHeight = video.videoHeight;
-        const videoAspect = videoNaturalWidth / videoNaturalHeight;
-        
-        // Get container dimensions
-        const containerWidth = containerRect.width;
-        const containerHeight = containerRect.height;
-        const containerAspect = containerWidth / containerHeight;
-
-        // Calculate actual video display dimensions (object-fit: contain behavior)
-        let displayWidth: number;
-        let displayHeight: number;
-        let offsetX: number;
-        let offsetY: number;
-
-        if (videoAspect > containerAspect) {
-          // Video is wider than container - letterboxing (black bars top/bottom)
-          displayWidth = containerWidth;
-          displayHeight = containerWidth / videoAspect;
-          offsetX = 0;
-          offsetY = (containerHeight - displayHeight) / 2;
-        } else {
-          // Video is taller than container - pillarboxing (black bars left/right)
-          displayWidth = containerHeight * videoAspect;
-          displayHeight = containerHeight;
-          offsetX = (containerWidth - displayWidth) / 2;
-          offsetY = 0;
+        if (!isValid && !debugMode) {
+          // If overlay is misaligned and not in debug mode, hide it
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          return;
         }
 
         // Set canvas size to match the actual video display area (use device pixel ratio for crisp rendering)
@@ -381,7 +466,6 @@ export default function Results() {
         canvas.style.height = `${displayHeight}px`;
         
         // Position canvas to exactly match video display area
-        // offsetX and offsetY are already relative to container, and container has position: relative
         canvas.style.position = 'absolute';
         canvas.style.left = `${offsetX}px`;
         canvas.style.top = `${offsetY}px`;
@@ -391,12 +475,31 @@ export default function Results() {
         // Clear canvas
         ctx.clearRect(0, 0, displayWidth, displayHeight);
         
-        // Set drawing styles
-        ctx.strokeStyle = '#00ff00';
+        // Draw debug information if enabled
+        if (debugMode) {
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+          ctx.font = '12px monospace';
+          ctx.fillText(`Video: ${video.videoWidth}x${video.videoHeight}`, 10, 20);
+          ctx.fillText(`Display: ${displayWidth.toFixed(0)}x${displayHeight.toFixed(0)} @ (${offsetX.toFixed(0)}, ${offsetY.toFixed(0)})`, 10, 35);
+          ctx.fillText(`Time: ${currentTime.toFixed(2)}s`, 10, 50);
+          if (frame.timestamp !== undefined) {
+            ctx.fillText(`Pose Time: ${frame.timestamp.toFixed(2)}s (diff: ${Math.abs(frame.timestamp - currentTime).toFixed(3)}s)`, 10, 65);
+          }
+          ctx.fillText(`Frame: ${frame.frame_number !== undefined ? frame.frame_number : 'N/A'}`, 10, 80);
+          ctx.fillText(`Valid: ${isValid ? 'YES' : 'NO'}`, 10, 95);
+          
+          // Draw bounding box around video display area
+          ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(0, 0, displayWidth, displayHeight);
+        }
+        
+        // Set drawing styles for pose overlay
+        ctx.strokeStyle = isValid ? '#00ff00' : '#ff0000'; // Red if invalid
         ctx.lineWidth = 3;
-        ctx.fillStyle = '#00ff00';
+        ctx.fillStyle = isValid ? '#00ff00' : '#ff0000';
 
-        // Draw pose connections with rotation applied
+        // Draw pose connections
         POSE_CONNECTIONS.forEach(([a, b]) => {
           const p1 = frame.landmarks[a as string];
           const p2 = frame.landmarks[b as string];
@@ -406,9 +509,9 @@ export default function Results() {
           const visibility2 = (p2 as any).visibility ?? 1;
           if (visibility1 < 0.5 || visibility2 < 0.5) return;
 
-          // Apply rotation transformation
-          const startPos = transformLandmark(p1, videoRotation, displayWidth, displayHeight);
-          const endPos = transformLandmark(p2, videoRotation, displayWidth, displayHeight);
+          // Transform normalized coordinates to canvas pixels
+          const startPos = transformLandmark(p1, displayWidth, displayHeight);
+          const endPos = transformLandmark(p2, displayWidth, displayHeight);
 
           ctx.beginPath();
           ctx.moveTo(startPos.x, startPos.y);
@@ -416,18 +519,26 @@ export default function Results() {
           ctx.stroke();
         });
 
-        // Draw pose landmarks (joints) with rotation applied
-        Object.values(frame.landmarks).forEach(p => {
+        // Draw pose landmarks (joints)
+        Object.entries(frame.landmarks).forEach(([name, p]) => {
           if (!p) return;
           const visibility = (p as any).visibility ?? 1;
           if (visibility < 0.5) return;
           
-          // Apply rotation transformation
-          const pos = transformLandmark(p, videoRotation, displayWidth, displayHeight);
+          // Transform normalized coordinates to canvas pixels
+          const pos = transformLandmark(p, displayWidth, displayHeight);
           
           ctx.beginPath();
           ctx.arc(pos.x, pos.y, 4, 0, Math.PI * 2);
           ctx.fill();
+          
+          // Draw landmark name in debug mode
+          if (debugMode) {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.font = '8px monospace';
+            ctx.fillText(name.substring(0, 4), pos.x + 6, pos.y - 6);
+            ctx.fillStyle = isValid ? '#00ff00' : '#ff0000';
+          }
         });
       };
 
@@ -444,7 +555,7 @@ export default function Results() {
         video.removeEventListener('loadedmetadata', redraw);
         window.removeEventListener('resize', redraw);
       };
-    }, [poseData, showPose, videoRotation]);
+    }, [poseData, showPose, debugMode]);
 
     if (!videoUrl) {
       return (
@@ -482,12 +593,30 @@ export default function Results() {
           />
 
           {poseData && poseData.length > 0 && (
-            <button
-              onClick={() => setShowPose(v => !v)}
-              className="absolute top-4 right-4 z-10 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-semibold transition-colors"
-            >
-              {showPose ? 'Hide Pose' : 'Show Pose'}
-            </button>
+            <div className="absolute top-4 right-4 z-10 flex gap-2">
+              <button
+                onClick={() => setDebugMode(d => !d)}
+                className={`px-3 py-2 rounded-md font-semibold transition-colors text-xs ${
+                  debugMode 
+                    ? 'bg-yellow-600 hover:bg-yellow-700 text-white' 
+                    : 'bg-gray-600 hover:bg-gray-700 text-white'
+                }`}
+                title="Toggle debug overlay information"
+              >
+                Debug
+              </button>
+              <button
+                onClick={() => setShowPose(v => !v)}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-semibold transition-colors"
+              >
+                {showPose ? 'Hide Pose' : 'Show Pose'}
+              </button>
+            </div>
+          )}
+          {!overlayValid && !debugMode && (
+            <div className="absolute bottom-4 left-4 right-4 z-10 bg-yellow-900/90 border border-yellow-600 text-yellow-100 px-4 py-2 rounded-md text-sm">
+              ⚠️ Pose overlay may be misaligned. Enable Debug mode to diagnose.
+            </div>
           )}
         </div>
       </div>
