@@ -254,6 +254,8 @@ export default function Results() {
   }> = ({ videoUrl, poseData, onVideoError }) => {
     const [showPose, setShowPose] = useState(true);
     const [videoOrientation, setVideoOrientation] = useState<'portrait' | 'landscape'>('landscape');
+    const [rotationMode, setRotationMode] = useState<0 | 90 | 180 | 270>(0);
+    const [debugInfo, setDebugInfo] = useState<string>('');
     const videoRef = useRef<HTMLVideoElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -358,13 +360,34 @@ export default function Results() {
 
     /**
      * Transform normalized MediaPipe landmark coordinates to canvas pixel coordinates.
-     * For portrait videos, applies 90° clockwise rotation: (x, y) → (1-y, x)
+     * Supports rotation testing modes (0°, 90°, 180°, 270°) for debugging alignment.
      */
     const transformLandmark = (
       landmark: LandmarkCoordinates | { x: number; y: number; z?: number },
       width: number,
       height: number
     ): { x: number; y: number } => {
+      let x = landmark.x;
+      let y = landmark.y;
+
+      // Use rotation mode if set (for testing), otherwise use orientation-based transform
+      if (rotationMode !== 0) {
+        switch (rotationMode) {
+          case 90:
+            // 90° clockwise: (x,y) → (1-y, x)
+            return { x: (1 - y) * width, y: x * height };
+          case 180:
+            // 180°: (x,y) → (1-x, 1-y)
+            return { x: (1 - x) * width, y: (1 - y) * height };
+          case 270:
+            // 270° clockwise (90° counter-clockwise): (x,y) → (y, 1-x)
+            return { x: y * width, y: (1 - x) * height };
+          default:
+            return { x: x * width, y: y * height };
+        }
+      }
+
+      // Default behavior: use orientation-based transform
       if (videoOrientation === 'portrait') {
         // CRITICAL: Portrait videos need 90° CLOCKWISE rotation
         // Transform: (x, y) → (1-y, x)
@@ -382,7 +405,7 @@ export default function Results() {
       }
     };
 
-    // Detect video orientation (portrait vs landscape)
+    // Detect video orientation (portrait vs landscape) with extensive logging
     useEffect(() => {
       const video = videoRef.current;
       if (!video) return;
@@ -390,19 +413,25 @@ export default function Results() {
       const detectOrientation = () => {
         const width = video.videoWidth;
         const height = video.videoHeight;
+        const aspectRatio = width > 0 && height > 0 ? (width / height).toFixed(2) : '0';
+        const isPortrait = height > width;
         
-        if (width > 0 && height > 0) {
-          console.log('=== Video Metadata ===');
-          console.log('Video dimensions:', width, 'x', height);
-          
-          // Portrait: height > width
-          const isPortrait = height > width;
-          const orientation = isPortrait ? 'portrait' : 'landscape';
-          
-          setVideoOrientation(orientation);
-          console.log('Detected orientation:', orientation);
-          console.log('Needs 90° rotation:', isPortrait);
-        }
+        const info = {
+          videoWidth: width,
+          videoHeight: height,
+          aspectRatio: aspectRatio,
+          isPortrait: isPortrait,
+          displayWidth: video.clientWidth,
+          displayHeight: video.clientHeight,
+        };
+        
+        console.log('📹 VIDEO DEBUG:', info);
+        setDebugInfo(JSON.stringify(info, null, 2));
+        
+        const orientation = isPortrait ? 'portrait' : 'landscape';
+        setVideoOrientation(orientation);
+        console.log('Detected orientation:', orientation);
+        console.log('Needs 90° rotation:', isPortrait);
       };
 
       video.addEventListener('loadedmetadata', detectOrientation);
@@ -485,6 +514,7 @@ export default function Results() {
             const transformed = transformLandmark(firstLandmark as any, displayWidth, displayHeight);
             console.log('=== Pose Drawing Debug ===');
             console.log('Video orientation:', videoOrientation);
+            console.log('Rotation mode:', rotationMode, '°');
             console.log('Original landmark 0:', (firstLandmark as any).x?.toFixed(3), (firstLandmark as any).y?.toFixed(3));
             console.log('Transformed to:', transformed.x.toFixed(1), transformed.y.toFixed(1));
             console.log('Canvas size:', displayWidth.toFixed(0), 'x', displayHeight.toFixed(0));
@@ -544,7 +574,7 @@ export default function Results() {
         video.removeEventListener('loadedmetadata', redraw);
         window.removeEventListener('resize', redraw);
       };
-    }, [poseData, showPose, videoOrientation]); // Add videoOrientation to dependencies
+    }, [poseData, showPose, videoOrientation, rotationMode]); // Add rotationMode to dependencies
 
     if (!videoUrl) {
       return (
@@ -582,12 +612,59 @@ export default function Results() {
           />
 
           {poseData && poseData.length > 0 && (
-            <button
-              onClick={() => setShowPose(v => !v)}
-              className="absolute top-4 right-4 z-10 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-semibold transition-colors"
-            >
-              {showPose ? 'Hide Pose' : 'Show Pose'}
-            </button>
+            <>
+              <button
+                onClick={() => setShowPose(v => !v)}
+                className="absolute top-4 right-4 z-10 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-semibold transition-colors"
+              >
+                {showPose ? 'Hide Pose' : 'Show Pose'}
+              </button>
+              
+              {/* Rotation Test Buttons (for debugging overlay alignment) */}
+              <div className="absolute top-20 right-4 flex flex-col gap-2 z-50">
+                <div className="text-xs text-white bg-black/70 px-2 py-1 rounded mb-1">Rotation Test:</div>
+                <button 
+                  onClick={() => setRotationMode(0)} 
+                  className={`px-3 py-1 text-xs rounded transition-colors ${
+                    rotationMode === 0 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-600 text-gray-200 hover:bg-gray-500'
+                  }`}
+                >
+                  0°
+                </button>
+                <button 
+                  onClick={() => setRotationMode(90)} 
+                  className={`px-3 py-1 text-xs rounded transition-colors ${
+                    rotationMode === 90 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-600 text-gray-200 hover:bg-gray-500'
+                  }`}
+                >
+                  90°
+                </button>
+                <button 
+                  onClick={() => setRotationMode(180)} 
+                  className={`px-3 py-1 text-xs rounded transition-colors ${
+                    rotationMode === 180 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-600 text-gray-200 hover:bg-gray-500'
+                  }`}
+                >
+                  180°
+                </button>
+                <button 
+                  onClick={() => setRotationMode(270)} 
+                  className={`px-3 py-1 text-xs rounded transition-colors ${
+                    rotationMode === 270 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-gray-600 text-gray-200 hover:bg-gray-500'
+                  }`}
+                >
+                  270°
+                </button>
+              </div>
+            </>
           )}
         </div>
       </div>
