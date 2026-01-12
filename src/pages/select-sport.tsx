@@ -114,28 +114,11 @@ const FALLBACK_SPORTS: SportInfo[] = [
 
 export default function SelectSport() {
   const router = useRouter();
-  const { checking, approved } = useWaitlistAccess();
   const [sports, setSports] = useState<SportInfo[]>([]);
   const [selectedSport, setSelectedSport] = useState<SportInfo | null>(null);
   const [selectedExercise, setSelectedExercise] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Block access if not approved
-  if (checking) {
-    return (
-      <Layout>
-        <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
-          <p className="text-muted-foreground">Checking access...</p>
-        </div>
-      </Layout>
-    );
-  }
-
-  if (!approved) {
-    return null; // Will redirect
-  }
 
   useEffect(() => {
     const fetchSports = async () => {
