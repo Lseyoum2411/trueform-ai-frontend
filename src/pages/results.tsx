@@ -6,13 +6,11 @@ import { getAnalysisResults, getVideoStatus } from '@/lib/api';
 import { AnalysisResult, UIFeedback, VideoStatus, PoseDataFrame, LandmarkCoordinates } from '@/types';
 import { Loader } from '@/components/Loader';
 import { formatFeedbackItem, formatStrengthText, formatMetricLabel, FormattedFeedback } from '@/utils/feedbackFormatter';
-import { useWaitlistAccess } from '@/hooks/useWaitlistAccess';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export default function Results() {
   const router = useRouter();
-  const { checking, approved } = useWaitlistAccess();
   const { video_id, filename } = router.query;
   const videoId = video_id as string;
   const videoFilename = filename as string | undefined;

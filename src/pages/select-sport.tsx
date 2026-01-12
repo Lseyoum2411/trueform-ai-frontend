@@ -5,7 +5,6 @@ import { Layout } from '@/components/Layout';
 import { ExerciseSelector } from '@/components/ExerciseSelector';
 import { SportInfo, ExerciseType } from '@/types';
 import axios from 'axios';
-import { useWaitlistAccess } from '@/hooks/useWaitlistAccess';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
