@@ -56,3 +56,25 @@ export const getSports = async () => {
   const response = await axios.get(`${API_BASE_URL}/api/v1/sports`);
   return response.data;
 };
+
+// Waitlist functions
+export interface WaitlistEntry {
+  email: string;
+  name: string;
+  sport: string;
+}
+
+export interface WaitlistStatus {
+  approved: boolean;
+  on_waitlist: boolean;
+}
+
+export const joinWaitlist = async (entry: WaitlistEntry) => {
+  const response = await axios.post(`${API_BASE_URL}/api/v1/waitlist/join`, entry);
+  return response.data;
+};
+
+export const checkWaitlistStatus = async (email: string): Promise<WaitlistStatus> => {
+  const response = await axios.get(`${API_BASE_URL}/api/v1/waitlist/check/${encodeURIComponent(email)}`);
+  return response.data;
+};

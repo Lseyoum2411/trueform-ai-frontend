@@ -6,11 +6,13 @@ import { getAnalysisResults, getVideoStatus } from '@/lib/api';
 import { AnalysisResult, UIFeedback, VideoStatus, PoseDataFrame, LandmarkCoordinates } from '@/types';
 import { Loader } from '@/components/Loader';
 import { formatFeedbackItem, formatStrengthText, formatMetricLabel, FormattedFeedback } from '@/utils/feedbackFormatter';
+import { useWaitlistAccess } from '@/hooks/useWaitlistAccess';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export default function Results() {
   const router = useRouter();
+  const { checking, approved } = useWaitlistAccess();
   const { video_id, filename } = router.query;
   const videoId = video_id as string;
   const videoFilename = filename as string | undefined;
@@ -132,6 +134,21 @@ export default function Results() {
       improvements: uniqueImprovements,
     };
   };
+
+  if (checking) {
+    return (
+      <Layout>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!approved) {
+    return null; // Hook handles redirect
+  }
 
   if (!videoId) {
     return (

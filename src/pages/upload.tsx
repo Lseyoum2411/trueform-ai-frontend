@@ -4,9 +4,11 @@ import { Layout } from '@/components/Layout';
 import { VideoUpload } from '@/components/VideoUpload';
 import { FeedbackToast } from '@/components/FeedbackToast';
 import { Sport } from '@/types';
+import { useWaitlistAccess } from '@/hooks/useWaitlistAccess';
 
 export default function Upload() {
   const router = useRouter();
+  const { checking, approved } = useWaitlistAccess();
   const { sport, exercise_type } = router.query;
   const [toast, setToast] = useState<{
     message: string;
@@ -21,6 +23,21 @@ export default function Upload() {
       router.push('/select-sport');
     }
   }, [sport, router]);
+
+  if (checking) {
+    return (
+      <Layout>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!approved) {
+    return null; // Hook handles redirect
+  }
 
   const getSportTitle = (sport: string, exerciseType?: string): string => {
     const titles: Record<string, string> = {
